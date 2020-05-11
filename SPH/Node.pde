@@ -45,7 +45,8 @@ class Node {
   }
 
   void display(int size_) {
-    stroke(255);
+    stroke(0, 0, 1);
+    strokeWeight(1);
     noFill();
     if (dim) {
       float w = map(rhigh.x - rlow.x, 0, 1, 0, size_);

@@ -1,7 +1,6 @@
 class Simulation {
   int leaf_size;
   int speed_up;
-  int num_steps;
   int param;
   int num_particles;
   int iter;
@@ -18,10 +17,9 @@ class Simulation {
   float dt = 0;
   float max_rho = 0;
 
-  Simulation(int leaf_size_, int speed_up_, int num_steps_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_) {
+  Simulation(int leaf_size_, int speed_up_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_) {
     leaf_size = leaf_size_;
     speed_up = speed_up_;
-    num_steps = num_steps_;
     param = param_;
     iter = iter_;
     e_ini = e_ini_;
@@ -32,19 +30,11 @@ class Simulation {
     if (dim) {
       gamma = 5./3.;
       sigma = 8./PI;
-      if (param == 1) {
-        num_particles = int(pow(iter, 3)) + 1;
-      } else {
-        num_particles = int(pow(iter, 3));
-      }
+      num_particles = int(pow(iter, 3));
     } else {
       gamma = 2.;
       sigma = 40./(7 * PI);
-      if (param == 1) {
-        num_particles = int(pow(iter, 2)) + 1;
-      } else {
-        num_particles = int(pow(iter, 2));
-      }
+      num_particles = int(pow(iter, 2));
     }
     particles = new ArrayList<Particle>();
     PVector rlow = new PVector(0, 0, 0);
@@ -60,25 +50,25 @@ class Simulation {
     randomSeed(0);
     if (dim) {
       if (param == 1) {
-        for (int i = 0; i < num_particles; i++) {
+        for (int i = 0; i < num_particles-1; i++) {
           float x = random(1);
           float y = random(1);
           float z = random(1);
-          Particle particle = new Particle(new PVector(x, y, z), new PVector(0, 0, 0), new PVector(0, 0, 0), 1/num_particles, 1);
+          Particle particle = new Particle(new PVector(x, y, z), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, 1.);
           particles.add(particle);
         }
-        Particle particle = new Particle(new PVector(0.5, 0.5, 0.5), new PVector(0, 0, 0), new PVector(0, 0, 0), 1/num_particles, e_ini);
+        Particle particle = new Particle(new PVector(0.5, 0.5, 0.5), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, e_ini);
         particles.add(particle);
       } else {
-        float spacing = 1 / iter;
+        float spacing = 1. / iter;
         for (int x = 0; x < iter; x++) {
           for (int y = 0; y < iter; y++) {
             for (int z = 0; z < iter; z++) {
               if ((spacing * x + 0.5 * spacing == 0.5) && (spacing * y + 0.5 * spacing == 0.5) && (spacing * z + 0.5 * spacing == 0.5)) {
-                Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1/num_particles, e_ini);
+                Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, e_ini);
                 particles.add(particle);
               } else {
-                Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1/num_particles, 1);
+                Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, 1);
                 particles.add(particle);
               }
             }
@@ -87,16 +77,16 @@ class Simulation {
       }
     } else {
       if (param == 1) {
-        for (int i = 0; i < num_particles; i++) {
+        for (int i = 0; i < num_particles-1; i++) {
           float x = random(1);
           float y = random(1);
-          Particle particle = new Particle(new PVector(x, y), new PVector(0, 0), new PVector(0, 0), 1/num_particles, 1);
+          Particle particle = new Particle(new PVector(x, y), new PVector(0, 0), new PVector(0, 0), 1./num_particles, 1);
           particles.add(particle);
         }
-        Particle particle = new Particle(new PVector(0.5, 0.5, 0.5), new PVector(0, 0, 0), new PVector(0, 0), 1/num_particles, e_ini);
+        Particle particle = new Particle(new PVector(0.5, 0.5, 0.5), new PVector(0, 0, 0), new PVector(0, 0), 1./num_particles, e_ini);
         particles.add(particle);
       } else {
-        float spacing = 1 / iter;
+        float spacing = 1. / iter;
         for (int x = 0; x < iter; x++) {
           for (int y = 0; y < iter; y++) {
             if ((spacing * x + 0.5 * spacing == 0.5) && (spacing * y + 0.5 * spacing == 0.5)) {
@@ -290,24 +280,6 @@ class Simulation {
     }
   }
 
-  void update() {
-    //def integrate_sph(frame, dt):
-    //"""
-    //basic calculation workflow is drift 1, calc new dt, kick, drift 2, and repeat
-    //:param frame: which frame number are we in
-    //:param dt: current dt
-    //:return: new dt
-    //"""
-    //start_time = time()
-    //drift1(dt * 0.5)
-    //dt = calc_forces()
-    //kick(dt)
-    //print("dt = {:.5f}, t = {:.5f}".format(dt, particles[0].dt))
-    //drift2(dt * 0.5)
-    //sys.stdout.write('\r')
-    //sys.stdout.write("The calculation for timestep {} of {} took {:.3f} seconds.\n".format(frame, num_steps, time() - start_time))
-    //return dt
-  }
 
   void nn_density(Node root) {
     if (dim) {
@@ -342,10 +314,83 @@ class Simulation {
     }
   }
 
+  void calcsound() {
+    for (Particle p : particles) {
+      p.c_sound = pow(gamma * (gamma - 1) * p.e_pred, 0.5);
+    }
+  }
+
+  void calc_dt() {
+    float c_max = 0.;
+    float h_min = MAX_FLOAT;
+    for (Particle p : particles) {
+      c_max = max(p.c_sound, c_max);
+      h_min = min(p.h, h_min);
+    }
+    dt = h_min/c_max * courant;
+    dt_global += dt;
+  }
+
+  void reset_ae() {
+    if (dim) {
+      for (Particle p : particles) {
+        p.a.set(0., 0., 0.);
+        p.e_dot = 0.;
+      }
+    } else {
+      for (Particle p : particles) {
+        p.a.set(0., 0.);
+        p.e_dot = 0.;
+      }
+    }
+  }
+
+
+  void nn_sphforce() {
+    reset_ae();
+    for (Particle p : particles) {
+      p.calc_ae(gamma, sigma, dim);
+    }
+  }
+
   void calc_forces() {
     treeBuild(root, 0);
     nn_density(root);
+    calcsound();
+    calc_dt();
+    nn_sphforce();
   }
+
+  void drift1() {
+    for (Particle p : particles) {
+      p.pos.add(PVector.mult(p.vel, dt * 0.5));
+      p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
+      p.v_pred = PVector.add(p.vel, PVector.mult(p.a, dt * 0.5));
+      p.e_pred = p.e + p.e_dot * 0.5 * dt;
+    }
+  }
+
+  void drift2() {
+    for (Particle p : particles) {
+      p.pos.add(PVector.mult(p.vel, dt * 0.5));
+      p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
+    }
+  }
+
+  void kick() {
+    for (Particle p : particles) {
+      p.vel.add(PVector.mult(p.a, dt));
+      p.e += p.e_dot * dt;
+    }
+  }
+
+  void update() {
+    drift1();
+    calc_forces();
+    kick();
+    drift2();
+  }
+
 
 
   void show_particles() {
