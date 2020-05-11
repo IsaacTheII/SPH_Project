@@ -1,0 +1,33 @@
+Protokoll Kickoff meeting Fluid dynamics:
+
+Presentation: 25. Mai 2020
+
+processing reference
+
+Nicola informiert Simon.
+Box in die man Wasser reinfliessen lassen kann.
+Code portieren. Processing und Java.
+
+Aufgaben:  Alles was in Python in Java übersetzen.
+
+Boundary conditions:
+Diskussion über wie man ein Teilchen simuliert das an eine Wand stosst. Einfallswinkel = Ausfallswinkel.
+
+Gravitation:
+
+Wendland Kernel (verhindert clustering)
+
+Viscosity?
+
+Oberflächenspannung?
+
+Musterprojekt:
+https://github.com/daniel-heinrich/hmbd/tree/master/Processing/SPH
+Schauen video https://www.youtube.com/watch?v=ok4MKnQdamQ als inspiration.
+
+
+Zeitplan:
+24.5: Präsentation zusammenstellen (inkl. Zip von animationen)
+18.4: Final Stage – animationen machen
+11.4: Implementation in processing. Tree von Simon, physik von Nicola code
+
