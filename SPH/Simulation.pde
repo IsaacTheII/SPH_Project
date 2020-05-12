@@ -13,7 +13,7 @@ class Simulation {
   int size;
   float t_global = 0;
   float dt = 0;
-  float max_rho = 0;
+  float max_val = 0;
 
   Simulation(int leaf_size_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_) {
     leaf_size = leaf_size_;
@@ -300,14 +300,15 @@ class Simulation {
         p.nn_search_2d(root, nn, particles);
       }
     }
+    max_val = 0.;
     if (dim) {
       for (Particle p : particles) {
         p.rho = 0;
         for (ParticleTuple tup : p.n_closest) {
           p.rho += tup.p.m * p.monoghan_kernel_3d(tup.dist, sigma);
         }
-        if (p.rho > max_rho) {
-          max_rho = p.rho;
+        if (p.pa > max_val) {
+          max_val = p.pa;
         }
       }
     } else {
@@ -316,8 +317,8 @@ class Simulation {
         for (ParticleTuple tup : p.n_closest) {
           p.rho += tup.p.m * p.monoghan_kernel_2d(tup.dist, sigma);
         }
-        if (p.rho > max_rho) {
-          max_rho = p.rho;
+        if (p.pa > max_val) {
+          max_val = p.pa;
         }
       }
     }
@@ -417,14 +418,14 @@ class Simulation {
 
 
   void show_particles() {
-    root.show(size);
+    //root.show(size);
     if (dim) {
       for (Particle p : particles) {
-        p.show_3d(size, max_rho);
+        p.show_3d(size, max_val);
       }
     } else {    
       for (Particle p : particles) {
-        p.show_2d(size, max_rho);
+        p.show_2d(size, max_val);
       }
     }
   }

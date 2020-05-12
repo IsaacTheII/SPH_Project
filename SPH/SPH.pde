@@ -1,9 +1,9 @@
 float a = 0.;
 int leaf_size = 8;
 int speed_up = 1;
-int param = 0; // 1 = random, 0 = uniform
-int iter = 11;
-float e_ini = 100.;
+int param = 1; // 1 = random, 0 = uniform
+int iter = 50;
+float e_ini = 10000000.;
 int nn = 32;
 boolean dim = false;
 float courant = 0.05;
@@ -29,10 +29,14 @@ void draw() {
     rotateY(a);
     a += 0.002;
   }
+  //if (frameCount % 50 == 0) {
+  //  sim.reset_e();
+  //}
 
   // implement constant time per frame here instead of calculations per frame
   for (int i = 0; i < speed_up; i++) {
     sim.update();
   }
+  println(frameRate);
   sim.show_particles();
 }
