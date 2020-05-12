@@ -1,7 +1,5 @@
 class Simulation {
   int leaf_size;
-  int speed_up;
-  int param;
   int num_particles;
   int iter;
   float e_ini;
@@ -13,14 +11,12 @@ class Simulation {
   Node root;
   ArrayList<Particle> particles;
   int size;
-  float dt_global = 0;
+  float t_global = 0;
   float dt = 0;
   float max_rho = 0;
 
-  Simulation(int leaf_size_, int speed_up_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_) {
+  Simulation(int leaf_size_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_) {
     leaf_size = leaf_size_;
-    speed_up = speed_up_;
-    param = param_;
     iter = iter_;
     e_ini = e_ini_;
     nn = nn_;
@@ -37,14 +33,30 @@ class Simulation {
       num_particles = int(pow(iter, 2));
     }
     particles = new ArrayList<Particle>();
-    PVector rlow = new PVector(0, 0, 0);
-    PVector rhigh = new PVector(1, 1, 1);
+    PVector rlow = getRlow();
+    PVector rhigh = getRhigh();
     root = new Node(0, num_particles, rlow, rhigh, dim);
-    read_data();
+    read_data(param_);
+  }
+
+  PVector getRlow() {
+    if (dim) {
+      return new PVector(0, 0, 0);
+    } else {
+      return new PVector(0, 0);
+    }
+  }
+
+  PVector getRhigh() {
+    if (dim) {
+      return new PVector(1, 1, 1);
+    } else {
+      return new PVector(1, 1);
+    }
   }
 
 
-  void read_data() {
+  void read_data(int param) {
     println("Creating ", num_particles, " particles");
 
     randomSeed(0);
@@ -68,7 +80,7 @@ class Simulation {
                 Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, e_ini);
                 particles.add(particle);
               } else {
-                Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, 1);
+                Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, 1.);
                 particles.add(particle);
               }
             }
@@ -83,17 +95,17 @@ class Simulation {
           Particle particle = new Particle(new PVector(x, y), new PVector(0, 0), new PVector(0, 0), 1./num_particles, 1);
           particles.add(particle);
         }
-        Particle particle = new Particle(new PVector(0.5, 0.5, 0.5), new PVector(0, 0, 0), new PVector(0, 0), 1./num_particles, e_ini);
+        Particle particle = new Particle(new PVector(0.5, 0.5), new PVector(0, 0), new PVector(0, 0), 1./num_particles, e_ini);
         particles.add(particle);
       } else {
         float spacing = 1. / iter;
         for (int x = 0; x < iter; x++) {
           for (int y = 0; y < iter; y++) {
             if ((spacing * x + 0.5 * spacing == 0.5) && (spacing * y + 0.5 * spacing == 0.5)) {
-              Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(0, 0), new PVector(0, 0), 1/num_particles, e_ini);
+              Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(0, 0), new PVector(0, 0), 1./num_particles, e_ini);
               particles.add(particle);
             } else {
-              Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(0, 0), new PVector(0, 0), 1/num_particles, 1);
+              Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(0, 0), new PVector(0, 0), 1./num_particles, 1.);
               particles.add(particle);
             }
           }
@@ -103,34 +115,35 @@ class Simulation {
     println("Done creating particles!\n");
   }
 
+  int getNexdim(int dimension) {
+    if (dim) {
+      return (dimension + 1)%3;
+    } else {
+      return (dimension + 1)%2;
+    }
+  }
+
 
   int treeBuild(Node node, int dimension) {
     if (node.isleaf(leaf_size)) {
-      for (int i = node.start; i < node.end; i++) {
-        Particle p = particles.get(i);
-        node.m += p.m;
-        node.cm = PVector.add(PVector.mult(p.pos, p.m), node.cm);
-      }
-      node.cm = PVector.mult(node.cm, 1/node.m);
+      //for (int i = node.start; i < node.end; i++) {
+      //  Particle p = particles.get(i);
+      //  node.m += p.m;
+      //  node.cm = PVector.add(PVector.mult(p.pos, p.m), node.cm);
+      //}
+      //node.cm = PVector.mult(node.cm, 1/node.m);
       node.leaf = true;
       return 0;
     }
-    int nexdim;
-    if (dim) {
-      nexdim = (dimension + 1)%3;
-    } else {
-      nexdim = (dimension + 1)%2;
-    }
+    int nexdim = getNexdim(dimension);
     float v;
     int s;
     if (dimension == 0) {
       v = node.center.x;
       s = partition(node.start, node.end, v, dimension);
       if ((s > node.start) && (s < node.end)) {
-        PVector rhigh = new PVector();
-        PVector rlow = new PVector();
-        rhigh = node.rhigh.copy();
-        rlow = node.rlow.copy();
+        PVector rhigh = node.rhigh.copy();
+        PVector rlow = node.rlow.copy();
         rhigh.x = v;
         rlow.x = v;
         Node left = new Node(node.start, s, node.rlow, rhigh, dim);
@@ -139,14 +152,14 @@ class Simulation {
         node.right = right;
         treeBuild(node.left, nexdim);
         treeBuild(node.right, nexdim);
-        node.m += node.left.m + node.right.m;
-        PVector leftcm = PVector.mult(node.left.cm, node.left.m);
-        PVector rightcm = PVector.mult(node.right.cm, node.right.m);
-        node.cm = PVector.div(PVector.add(leftcm, rightcm), node.m);
-      } else if (s <= node.start) {
+        //node.m += node.left.m + node.right.m;
+        //PVector leftcm = PVector.mult(node.left.cm, node.left.m);
+        //PVector rightcm = PVector.mult(node.right.cm, node.right.m);
+        //node.cm = PVector.div(PVector.add(leftcm, rightcm), node.m);
+      } else if (!(s > node.start)) {
         node.rlow.x = v;
         treeBuild(node, nexdim);
-      } else if (s >= node.end) {
+      } else if (!(s < node.end)) {
         node.rhigh.x = v;
         treeBuild(node, nexdim);
       }
@@ -154,10 +167,8 @@ class Simulation {
       v = node.center.y;
       s = partition(node.start, node.end, v, dimension);
       if ((s > node.start) && (s < node.end)) {
-        PVector rhigh = new PVector();
-        PVector rlow = new PVector();
-        rhigh = node.rhigh.copy();
-        rlow = node.rlow.copy();
+        PVector rhigh = node.rhigh.copy();
+        PVector rlow = node.rlow.copy();
         rhigh.y = v;
         rlow.y = v;
         Node left = new Node(node.start, s, node.rlow, rhigh, dim);
@@ -166,14 +177,14 @@ class Simulation {
         node.right = right;
         treeBuild(node.left, nexdim);
         treeBuild(node.right, nexdim);
-        node.m += node.left.m + node.right.m;
-        PVector leftcm = PVector.mult(node.left.cm, node.left.m);
-        PVector rightcm = PVector.mult(node.right.cm, node.right.m);
-        node.cm = PVector.div(PVector.add(leftcm, rightcm), node.m);
-      } else if (s <= node.start) {
+        //node.m += node.left.m + node.right.m;
+        //PVector leftcm = PVector.mult(node.left.cm, node.left.m);
+        //PVector rightcm = PVector.mult(node.right.cm, node.right.m);
+        //node.cm = PVector.div(PVector.add(leftcm, rightcm), node.m);
+      } else if (!(s > node.start)) {
         node.rlow.y = v;
         treeBuild(node, nexdim);
-      } else if (s >= node.end) {
+      } else if (!(s < node.end)) {
         node.rhigh.y = v;
         treeBuild(node, nexdim);
       }
@@ -181,10 +192,8 @@ class Simulation {
       v = node.center.z;
       s = partition(node.start, node.end, v, dimension);
       if ((s > node.start) && (s < node.end)) {
-        PVector rhigh = new PVector();
-        PVector rlow = new PVector();
-        rhigh = node.rhigh.copy();
-        rlow = node.rlow.copy();
+        PVector rhigh = node.rhigh.copy();
+        PVector rlow = node.rlow.copy();
         rhigh.z = v;
         rlow.z = v;
         Node left = new Node(node.start, s, node.rlow, rhigh, dim);
@@ -193,14 +202,14 @@ class Simulation {
         node.right = right;
         treeBuild(node.left, nexdim);
         treeBuild(node.right, nexdim);
-        node.m += node.left.m + node.right.m;
-        PVector leftcm = PVector.mult(node.left.cm, node.left.m);
-        PVector rightcm = PVector.mult(node.right.cm, node.right.m);
-        node.cm = PVector.div(PVector.add(leftcm, rightcm), node.m);
-      } else if (s <= node.start) {
+        //node.m += node.left.m + node.right.m;
+        //PVector leftcm = PVector.mult(node.left.cm, node.left.m);
+        //PVector rightcm = PVector.mult(node.right.cm, node.right.m);
+        //node.cm = PVector.div(PVector.add(leftcm, rightcm), node.m);
+      } else if (!(s > node.start)) {
         node.rlow.z = v;
         treeBuild(node, nexdim);
-      } else if (s >= node.end) {
+      } else if (!(s < node.end)) {
         node.rhigh.z = v;
         treeBuild(node, nexdim);
       }
@@ -212,7 +221,7 @@ class Simulation {
 
   int partition(int start, int end, float v, int dim) {
     int i = start;
-    int j = end -1;
+    int j = end - 1;
 
     if (dim == 0) {
       while ((i <= j) && (particles.get(i).pos.x < v)) {
@@ -328,7 +337,7 @@ class Simulation {
       h_min = min(p.h, h_min);
     }
     dt = h_min/c_max * courant;
-    dt_global += dt;
+    t_global += dt;
   }
 
   void reset_ae() {
@@ -342,6 +351,12 @@ class Simulation {
         p.a.set(0., 0.);
         p.e_dot = 0.;
       }
+    }
+  }
+
+  void reset_e() {
+    for (Particle p : particles) {
+      p.e = 1.;
     }
   }
 
@@ -364,7 +379,11 @@ class Simulation {
   void drift1() {
     for (Particle p : particles) {
       p.pos.add(PVector.mult(p.vel, dt * 0.5));
-      p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
+      if (dim) {
+        p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
+      } else {
+        p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1.);
+      }
       p.v_pred = PVector.add(p.vel, PVector.mult(p.a, dt * 0.5));
       p.e_pred = p.e + p.e_dot * 0.5 * dt;
     }
@@ -373,7 +392,11 @@ class Simulation {
   void drift2() {
     for (Particle p : particles) {
       p.pos.add(PVector.mult(p.vel, dt * 0.5));
-      p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
+      if (dim) {
+        p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
+      } else {
+        p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1.);
+      }
     }
   }
 
@@ -394,14 +417,14 @@ class Simulation {
 
 
   void show_particles() {
-    root.display(size);
+    root.show(size);
     if (dim) {
       for (Particle p : particles) {
         p.show_3d(size, max_rho);
       }
     } else {    
       for (Particle p : particles) {
-        p.show(size, max_rho);
+        p.show_2d(size, max_rho);
       }
     }
   }

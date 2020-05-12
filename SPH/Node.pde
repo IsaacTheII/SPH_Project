@@ -7,8 +7,8 @@ class Node {
   PVector rhigh;
   PVector center;
   float rmax;
-  float m = 0;
-  PVector cm;
+  //float m = 0;
+  //PVector cm;
   float size;
   boolean leaf = false;
   boolean dim;
@@ -18,18 +18,17 @@ class Node {
     end = end_;      
     rlow = rlow_;
     rhigh = rhigh_;
-    center = PVector.add(rlow, rhigh);
-    center = PVector.div(center, 2);
+    center = PVector.div(PVector.add(rlow, rhigh), 2);
     PVector dist = PVector.sub(rhigh_, rlow_);
     rmax = dist.mag()/2;
     dim = dim_;
-    if (dim) {
-      size = max(dist.x, dist.y, dist.z);
-      cm = new PVector(0, 0, 0);
-    } else {
-      size = max(dist.x, dist.y);
-      cm = new PVector(0, 0);
-    }
+    //if (dim) {
+    //  size = max(dist.x, dist.y, dist.z);
+    //  cm = new PVector(0, 0, 0);
+    //} else {
+    //  size = max(dist.x, dist.y);
+    //  cm = new PVector(0, 0);
+    //}
   }
 
 
@@ -39,12 +38,11 @@ class Node {
 
 
   float min_node_dist_pb(PVector pos, PVector offset) {
-    PVector dist = PVector.add(center, offset);
-    dist = PVector.sub(pos, dist);
+    PVector dist = PVector.sub(pos, PVector.add(center, offset));
     return dist.mag() - rmax;
   }
 
-  void display(int size_) {
+  void show(int size_) {
     stroke(0, 0, 1);
     strokeWeight(1);
     noFill();
@@ -62,8 +60,8 @@ class Node {
       box(w, h, d);
       popMatrix();
       if (!leaf) {
-        right.display(size_);
-        left.display(size_);
+        right.show(size_);
+        left.show(size_);
       }
     } else {
       float xl = map(rlow.x, 0, 1, -size_/2, size_/2);
@@ -73,8 +71,8 @@ class Node {
       rectMode(CORNERS);
       rect(xl, yl, xh, yh);
       if (!leaf) {
-        right.display(size_);
-        left.display(size_);
+        right.show(size_);
+        left.show(size_);
       }
     }
   }

@@ -22,6 +22,8 @@ class Particle {
     e_pred = e_;
   }
 
+
+  // heap sort
   //ArrayList<NodeTuple> heapify(ArrayList<NodeTuple> list_tup, int i) {
   //  int m = i;
   //  int l = 2 * i + 1;
@@ -39,7 +41,7 @@ class Particle {
   //  }
   //  return list_tup;
   //}
-
+  //
   //ArrayList<NodeTuple> insert_into_sort_list(ArrayList<NodeTuple> list_tup, NodeTuple tup) {
   //  list_tup.add(tup);
   //  for (int i = floor(list_tup.size()/2)-1; i >= 0; i--) {
@@ -76,9 +78,7 @@ class Particle {
     ArrayList<NodeTuple> node_q_sorted = new ArrayList<NodeTuple>();
     for (int x_off = -1; x_off < 2; x_off++) {
       for (int y_off = -1; y_off < 2; y_off++) {
-        PVector offset = PVector.sub(node.rhigh, node.rhigh);
-        offset.x = offset.x * x_off;
-        offset.y = offset.y * y_off;
+        PVector offset = new PVector(x_off, y_off);
         node_q_sorted = insert_into_sort_list(node_q_sorted, new NodeTuple(node, node.min_node_dist_pb(pos, offset), offset));
       }
     }
@@ -115,14 +115,10 @@ class Particle {
 
   void nn_search_3d(Node node, int nn, ArrayList<Particle> particles) {
     ArrayList<NodeTuple> node_q_sorted = new ArrayList<NodeTuple>();
-
     for (int x_off = -1; x_off < 2; x_off++) {
       for (int y_off = -1; y_off < 2; y_off++) {
         for (int z_off = -1; z_off < 2; z_off++) {
-          PVector offset = PVector.sub(node.rhigh, node.rlow);
-          offset.x = offset.x * x_off;
-          offset.y = offset.y * y_off;
-          offset.z = offset.z * z_off;
+          PVector offset = new PVector(x_off, y_off, z_off);
           node_q_sorted = insert_into_sort_list(node_q_sorted, new NodeTuple(node, node.min_node_dist_pb(pos, offset), offset));
         }
       }
@@ -182,30 +178,29 @@ class Particle {
 
   PVector grad_monoghan_kernel_3d(float dist, PVector dist_v, float sigma) {
     float dist_h = dist/h;
-    PVector result = new PVector();
+    PVector result = new PVector(0, 0, 0);
     if (dist_h < 0.5) {
       dist_v.normalize(result);
       return result.mult(6 * pow(sigma/h, 4) * (3 * pow(dist_h, 2)  - 2 * dist_h));
-    } else if (dist_h <= 1) {
+    } else if (dist_h <= 1.) {
       dist_v.normalize(result);
       return result.mult(6 * pow(sigma/h, 4) * -1 * pow(1 - dist_h, 2));
     } else {
-      result = new PVector(0, 0, 0);
       return result;
     }
   }
 
   PVector grad_monoghan_kernel_2d(float dist, PVector dist_v, float sigma) {
     float dist_h = dist/h;
-    PVector result = new PVector();
+    PVector result = new PVector(0, 0);
     if (dist_h < 0.5) {
       dist_v.normalize(result);
       return result.mult(6 * pow(sigma/h, 3) * (3 * pow(dist_h, 2)  - 2 * dist_h));
-    } else if (dist_h <= 1) {
+    } else if (dist_h <= 1.) {
       dist_v.normalize(result);
-      return result.mult(6 * pow(sigma/h, 3) * -1 * pow(1 - dist_h, 2));
+      return result.mult(6 * pow(sigma/h, 3) * -1. * pow(1. - dist_h, 2));
     } else {
-      return new PVector(0, 0, 0);
+      return result;
     }
   }
 
@@ -246,20 +241,19 @@ class Particle {
 
 
 
-  void show(int size, float max_rho) {
+  void show_2d(int size, float max_rho) {
     float col = map(rho, 0, max_rho, 0, 1);
     stroke(col, 1, 1);
-    strokeWeight(4);
+    strokeWeight(map(pow(rho, 2), 0, pow(max_rho, 2), 0, 20));
     float x = map(pos.x, 0, 1, -size/2, size/2);
     float y = map(pos.y, 0, 1, -size/2, size/2);
     point(x, y);
-
   }
 
   void show_3d(int size, float max_rho) {
     float col = map(rho, 0, max_rho, 0, 1);
     stroke(col, 1, 1);
-    strokeWeight(4);
+    strokeWeight(map(pow(rho, 2), 0, pow(max_rho, 2), 0, 20));
     float x = map(pos.x, 0, 1, -size/2, size/2);
     float y = map(pos.y, 0, 1, -size/2, size/2);
     float z = map(pos.z, 0, 1, -size/2, size/2);
