@@ -76,11 +76,12 @@ class Simulation {
         for (int x = 0; x < iter; x++) {
           for (int y = 0; y < iter; y++) {
             for (int z = 0; z < iter; z++) {
-              if ((spacing * x + 0.5 * spacing == 0.5) && (spacing * y + 0.5 * spacing == 0.5) && (spacing * z + 0.5 * spacing == 0.5)) {
+              if ((x == floor(iter/2)) && (y == floor(iter/2)) && (z == floor(iter/2))) {
                 Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, e_ini);
                 particles.add(particle);
               } else {
-                Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, 1.);
+                PVector pos = new PVector(spacing * x + 0.5 * spacing + randomGaussian() / 100, spacing * y + 0.5 * spacing + randomGaussian() / 100, spacing * z + 0.5 * spacing + randomGaussian() / 100);
+                Particle particle = new Particle(pos, new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, 1.);
                 particles.add(particle);
               }
             }
@@ -101,11 +102,12 @@ class Simulation {
         float spacing = 1. / iter;
         for (int x = 0; x < iter; x++) {
           for (int y = 0; y < iter; y++) {
-            if ((spacing * x + 0.5 * spacing == 0.5) && (spacing * y + 0.5 * spacing == 0.5)) {
+            if ((x == floor(iter/3)) && (y == floor(iter/2))) {
               Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(0, 0), new PVector(0, 0), 1./num_particles, e_ini);
               particles.add(particle);
             } else {
-              Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(0, 0), new PVector(0, 0), 1./num_particles, 1.);
+              PVector pos = new PVector(spacing * x + 0.5 * spacing + randomGaussian() / 1000, spacing * y + 0.5 * spacing + randomGaussian() / 1000);
+              Particle particle = new Particle(pos, new PVector(0, 0), new PVector(0, 0), 1./num_particles, 1.);
               particles.add(particle);
             }
           }
@@ -376,14 +378,21 @@ class Simulation {
     nn_sphforce();
   }
 
+  void boundary_condtions(Particle p) {
+    if(p.pos.y >= .98 || p.pos.y <= .04) p.vel.y *= -1;
+    if(p.pos.x >= .98 || p.pos.x <= .04) p.vel.x *= -1;
+
+    if (dim) {
+      p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
+    } else {
+      p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1.);
+    }
+  }
+
   void drift1() {
     for (Particle p : particles) {
       p.pos.add(PVector.mult(p.vel, dt * 0.5));
-      if (dim) {
-        p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
-      } else {
-        p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1.);
-      }
+      boundary_condtions(p);
       p.v_pred = PVector.add(p.vel, PVector.mult(p.a, dt * 0.5));
       p.e_pred = p.e + p.e_dot * 0.5 * dt;
     }
@@ -392,11 +401,7 @@ class Simulation {
   void drift2() {
     for (Particle p : particles) {
       p.pos.add(PVector.mult(p.vel, dt * 0.5));
-      if (dim) {
-        p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
-      } else {
-        p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1.);
-      }
+      boundary_condtions(p);
     }
   }
 
@@ -404,6 +409,8 @@ class Simulation {
     for (Particle p : particles) {
       p.vel.add(PVector.mult(p.a, dt));
       p.e += p.e_dot * dt;
+
+      p.vel.add(0, 1*dt);
     }
   }
 
