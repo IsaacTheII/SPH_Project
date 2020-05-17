@@ -1,5 +1,6 @@
 class Particle {
   PVector pos;
+  PVector temp_pos;
   PVector vel;
   PVector v_pred;
   PVector a;
@@ -14,6 +15,7 @@ class Particle {
 
   Particle(PVector pos_, PVector vel_, PVector a_, float m_, float e_) {
     pos = pos_;
+    temp_pos = pos;
     vel = vel_;
     a = a_;
     v_pred = vel_;
@@ -239,8 +241,6 @@ class Particle {
     }
   }
 
-
-
   void show_2d(int size, float max_rho) {
     float col = map(rho, 0, max_rho, 0, 1);
     stroke(col, 1, 1);
@@ -248,7 +248,7 @@ class Particle {
     strokeWeight(map(pow(rho, 2), 0, pow(max_rho, 2), 5, 20));
     float x = map(pos.x, 0, 1, -size/2, size/2);
     float y = map(pos.y, 0, 1, -size/2, size/2);
-    point(x, y);
+    point(x, y);    
   }
 
   void show_3d(int size, float max_rho) {

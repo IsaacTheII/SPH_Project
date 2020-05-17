@@ -14,8 +14,11 @@ class Simulation {
   float t_global = 0;
   float dt = 0;
   float max_rho = 0;
+  float v_ini;
+  int btype;
+  ArrayList<Boundary> boundaries;
 
-  Simulation(int leaf_size_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_) {
+  Simulation(int leaf_size_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_) {
     leaf_size = leaf_size_;
     iter = iter_;
     e_ini = e_ini_;
@@ -23,6 +26,10 @@ class Simulation {
     dim = dim_;
     courant = courant_;
     size = size_;
+    v_ini = v_ini_;
+    btype = btype_;
+    boundaries = new ArrayList<Boundary>();
+
     if (dim) {
       gamma = 5./3.;
       sigma = 8./PI;
@@ -37,6 +44,7 @@ class Simulation {
     PVector rhigh = getRhigh();
     root = new Node(0, num_particles, rlow, rhigh, dim);
     read_data(param_);
+    createBoundaries();
   }
 
   PVector getRlow() {
@@ -93,21 +101,30 @@ class Simulation {
         for (int i = 0; i < num_particles-1; i++) {
           float x = random(1);
           float y = random(1);
-          Particle particle = new Particle(new PVector(x, y), new PVector(0, 0), new PVector(0, 0), 1./num_particles, 1);
+          Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1);
           particles.add(particle);
         }
-        Particle particle = new Particle(new PVector(0.5, 0.5), new PVector(0, 0), new PVector(0, 0), 1./num_particles, e_ini);
+        Particle particle = new Particle(new PVector(0.5, 0.5), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, e_ini);
         particles.add(particle);
-      } else {
+      } else if (param == 2) {
+        for (int i = 0; i < num_particles-1; i++) {
+          float x = random(1);
+          float y = random(1);
+          Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0), new PVector(0.0, 0.0), 1./num_particles, 1);
+          particles.add(particle);
+        }
+        Particle particle = new Particle(new PVector(0.01, 0.5), new PVector(v_ini, -v_ini), new PVector(0.0, 0.0), 1./num_particles, 1);
+        particles.add(particle);
+      } else if (param == 0) {
         float spacing = 1. / iter;
         for (int x = 0; x < iter; x++) {
           for (int y = 0; y < iter; y++) {
             if ((x == floor(iter/3)) && (y == floor(iter/2))) {
-              Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(0, 0), new PVector(0, 0), 1./num_particles, e_ini);
+              Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, e_ini);
               particles.add(particle);
             } else {
               PVector pos = new PVector(spacing * x + 0.5 * spacing + randomGaussian() / 1000, spacing * y + 0.5 * spacing + randomGaussian() / 1000);
-              Particle particle = new Particle(pos, new PVector(0, 0), new PVector(0, 0), 1./num_particles, 1.);
+              Particle particle = new Particle(pos, new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1.);
               particles.add(particle);
             }
           }
@@ -115,6 +132,26 @@ class Simulation {
       }
     }
     println("Done creating particles!\n");
+  }
+
+  void createBoundaries() {
+
+    if (btype == 0) { 
+      // normal upper and lower boundaries
+      boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(1.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(0.0, 1.0), new PVector(1.0, 1.0)));
+    } else if (btype == 1) {
+      // btype=0 combined with a line segment angled at 45 degrees
+      boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(1.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(0.0, 1.0), new PVector(1.0, 1.0)));
+      boundaries.add(new Boundary(new PVector(0.3, 0.3), new PVector(0.7, 0.7)));
+    } else if (btype == 2) {
+      // btype=0 combined with two line segment angled at 45 degrees each
+      boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(1.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(0.0, 1.0), new PVector(1.0, 1.0)));
+      boundaries.add(new Boundary(new PVector(0.5, 0.5), new PVector(0.6, 0.6)));
+      boundaries.add(new Boundary(new PVector(0.5, 0.5), new PVector(0.6, 0.4)));
+    }
   }
 
   int getNexdim(int dimension) {
@@ -379,19 +416,33 @@ class Simulation {
   }
 
   void boundary_condtions(Particle p) {
-    if(p.pos.y >= .98 || p.pos.y <= .04) p.vel.y *= -1;
-    if(p.pos.x >= .98 || p.pos.x <= .04) p.vel.x *= -1;
+    //if(p.pos.y >= .98 || p.pos.y <= .04) p.vel.y *= -1;
+    //if(p.pos.x >= .98 || p.pos.x <= .04) p.vel.x *= -1;
 
     if (dim) {
       p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
     } else {
-      p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1.);
+      if (p.pos.x >= 1.0) {
+        p.pos.set(0.0, p.pos.y);
+        p.vel.set(v_ini, 0);
+      }
+      //p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1.);
+      //p.pos.set(p.pos.x, (p.pos.y + 1) % 1.);
     }
   }
 
   void drift1() {
     for (Particle p : particles) {
-      p.pos.add(PVector.mult(p.vel, dt * 0.5));
+
+      // Calculate the next position
+      p.temp_pos = PVector.add(p.pos, PVector.mult(p.vel, dt * 0.5));
+
+      // Check if crossed a bounary
+      for (Boundary b : boundaries) {
+        //println("Drift1: Current boundary: ", b.startPoint, b.endPoint);
+        b.checkBoundary(p);
+      }
+      p.pos = p.temp_pos;
       boundary_condtions(p);
       p.v_pred = PVector.add(p.vel, PVector.mult(p.a, dt * 0.5));
       p.e_pred = p.e + p.e_dot * 0.5 * dt;
@@ -400,7 +451,16 @@ class Simulation {
 
   void drift2() {
     for (Particle p : particles) {
-      p.pos.add(PVector.mult(p.vel, dt * 0.5));
+
+      // Calculate the next position
+      p.temp_pos = PVector.add(p.pos, PVector.mult(p.vel, dt * 0.5));
+
+      // Checked if crossed a boundary
+      for (Boundary b : boundaries) {
+        //println("Drift2: Current boundary: ", b.startPoint, b.endPoint);
+        b.checkBoundary(p);
+      }
+      p.pos = p.temp_pos;
       boundary_condtions(p);
     }
   }
@@ -410,7 +470,7 @@ class Simulation {
       p.vel.add(PVector.mult(p.a, dt));
       p.e += p.e_dot * dt;
 
-      p.vel.add(0, 1*dt);
+      //p.vel.add(0, 1 * dt);
     }
   }
 
@@ -425,11 +485,14 @@ class Simulation {
 
   void show_particles() {
     root.show(size);
+    for (Boundary b : boundaries) {
+      b.drawBoundary(size);
+    }
     if (dim) {
       for (Particle p : particles) {
         p.show_3d(size, max_rho);
       }
-    } else {    
+    } else {  
       for (Particle p : particles) {
         p.show_2d(size, max_rho);
       }
