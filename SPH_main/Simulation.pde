@@ -138,23 +138,33 @@ class Simulation {
 
     if (btype == 0) { 
       // normal upper and lower boundaries
-      boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
+      //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
+      //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
     } else if (btype == 1) {
       // btype=0 combined with a line segment angled at 45 degrees
-      boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
+      //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
+      //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
       boundaries.add(new Boundary(new PVector(0.4, 0.4), new PVector(0.6, 0.6)));
     } else if (btype == 2) {
       // btype=0 combined with two line segment angled at 45 degrees each
-      boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
-      boundaries.add(new Boundary(new PVector(0.5, 0.5), new PVector(0.6, 0.6)));
-      boundaries.add(new Boundary(new PVector(0.5, 0.5), new PVector(0.6, 0.4)));
+      //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
+      //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
+      boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.2, 0.5)));
+      boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.3, 0.4)));
+      //boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.3, 0.6)));
+      //boundaries.add(new Boundary(new PVector(0.3, 0.4), new PVector(0.2, 0.5)));
     } else if (btype == 3) {
       // btype=0 combined with two line segment angled at 45 degrees each
-      boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
+      //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
+      //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
       boundaries.add(new Boundary(new PVector(0.5, 0.5), new PVector(0.6, 0.6)));
       boundaries.add(new Boundary(new PVector(0.5, 0.5), new PVector(0.6, 0.4)));
     }
@@ -342,7 +352,7 @@ class Simulation {
       }
     } else {
       for (Particle p : particles) {
-        p.nn_search_2d(root, nn, particles);
+        p.nn_search_2d(root, nn, particles, boundaries);
       }
     }
     max_val = 0.;
@@ -436,13 +446,13 @@ class Simulation {
         p.pos.set(1, random(1));
         p.vel.set(-v_ini, 0);
       }
-      if (p.pos.y >= 1.0) {
-        p.pos.set(p.pos.x, 2 - p.pos.y);
-        p.vel.set(p.vel.x, -p.vel.y);
-      } else if (p.pos.y <= 0.0) {
-        p.pos.set(p.pos.x, - p.pos.y);
-        p.vel.set(p.vel.x, -p.vel.y);
-      }
+      //if (p.pos.y > 1.0) {
+      //  p.pos.set(p.pos.x, 2 - p.pos.y);
+      //  p.vel.set(p.vel.x, -p.vel.y);
+      //} else if (p.pos.y < 0.0) {
+      //  p.pos.set(p.pos.x, - p.pos.y);
+      //  p.vel.set(p.vel.x, -p.vel.y);
+      //}
       //p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1.);
       //p.pos.set(p.pos.x, (p.pos.y + 1) % 1.);
     }

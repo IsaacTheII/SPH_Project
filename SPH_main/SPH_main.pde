@@ -3,8 +3,8 @@ import peasy.*;
 float a = 0.;
 int leaf_size = 8;
 int speed_up = 1;
-int param = 1; // 2 = testing environment (low amount of particles), 1 = random, 0 = uniform
-int iter = 21;
+int param = 0; // 2 = testing environment (low amount of particles), 1 = random, 0 = uniform
+int iter = 31;
 float e_ini = 1;
 int nn = 32;
 boolean dim = false;
@@ -47,16 +47,16 @@ void draw() {
   }
 
   // implement constant time per frame here instead of calculations per frame
-  int counter = 0;
-  while (frame_dt < dt_thresh) {
-    sim.update();
-    frame_dt += sim.dt;
-    counter++;
-    total_framecount++;
-    if (total_framecount % 1000 == 0) sim.reset_e();
-  }
-  println(counter);
-  //sim.update();
+  //int counter = 0;
+  //while (frame_dt < dt_thresh) {
+  //  sim.update();
+  //  frame_dt += sim.dt;
+  //  counter++;
+  //  total_framecount++;
+  //  if (total_framecount % 1000 == 0) sim.reset_e();
+  //}
+  //println(counter);
+  sim.update();
 
   sim.show_particles();
   frame_dt = frame_dt%dt_thresh;

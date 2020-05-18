@@ -13,6 +13,7 @@ class Particle {
   float c_sound;
   float pa;
   ArrayList<ParticleTuple> n_closest;
+  boolean reflected = false;
 
   Particle(PVector pos_, PVector vel_, PVector a_, float m_, float e_) {
     pos = pos_;
@@ -76,15 +77,33 @@ class Particle {
     return list_tup;
   }
 
-
-  void nn_search_2d(Node node, int nn, ArrayList<Particle> particles) {
-    ArrayList<NodeTuple> node_q_sorted = new ArrayList<NodeTuple>();
-    for (int x_off = -1; x_off < 2; x_off++) {
-      for (int y_off = -1; y_off < 2; y_off++) {
-        PVector offset = new PVector(x_off, y_off);
-        node_q_sorted = insert_into_sort_list(node_q_sorted, new NodeTuple(node, node.min_node_dist_pb(pos, offset), offset));
-      }
+  void insert_in_q(PVector distance, Particle p) {
+    if (n_closest.get(n_closest.size() - 1).dist > distance.mag()) {
+      n_closest.remove(n_closest.size() - 1);
+      insert_into_sort_list(n_closest, new ParticleTuple(p, distance.mag(), distance));
     }
+  }
+
+
+
+
+
+
+  void nn_search_2d(Node node, int nn, ArrayList<Particle> particles, ArrayList<Boundary> boundaries) {
+    ArrayList<NodeTuple> node_q_sorted = new ArrayList<NodeTuple>();
+    //for (int x_off = -1; x_off < 2; x_off++) {
+    //  for (int y_off = -1; y_off < 2; y_off++) {
+    //    PVector offset = new PVector(x_off, y_off);
+    //    node_q_sorted = insert_into_sort_list(node_q_sorted, new NodeTuple(node, node.min_node_dist_pb(pos, offset), offset));
+    //  }
+    //}
+
+    for (int x_off = -1; x_off < 2; x_off++) {
+      PVector offset = new PVector(x_off, 0);
+      node_q_sorted = insert_into_sort_list(node_q_sorted, new NodeTuple(node, node.min_node_dist_pb(pos, offset), offset));
+    }
+
+
     n_closest = new ArrayList<ParticleTuple>();
     for (int i = 0; i <= nn; i++) {
       n_closest.add(new ParticleTuple(this, MAX_FLOAT, new PVector(0, 0)));
@@ -95,10 +114,7 @@ class Particle {
       if (temp.node.leaf) {
         for (int i = temp.node.start; i < temp.node.end; i++) {
           PVector distance = PVector.sub(pos, PVector.add(particles.get(i).pos, temp.offset));
-          if (n_closest.get(n_closest.size() - 1).dist > distance.mag()) {
-            n_closest.remove(n_closest.size() - 1);
-            n_closest = insert_into_sort_list(n_closest, new ParticleTuple(particles.get(i), distance.mag(), distance));
-          }
+          insert_in_q(distance, particles.get(i));
         }
       } else {
         NodeTuple left = new NodeTuple(temp.node.left, temp.node.left.min_node_dist_pb(pos, temp.offset), temp.offset);
@@ -114,7 +130,31 @@ class Particle {
       }
     }
     h = n_closest.get(n_closest.size() - 1).dist;
+
+    for (Boundary b : boundaries) {
+      //PVector P1 = b.startPoint;
+      //PVector P2 = b.endPoint;
+      //float nominator = (P2.y - P1.y) * pos.x - (P2.x - P1.x) * pos.y + P2.x * P1.y - P2.y * P1.x;
+      //float denominator = pow(pow(P2.y - P1.y, 2) + pow(P2.x - P1.x, 2), 0.5);
+      //float d_new = abs(nominator)/ denominator;
+      float d_new = b.distanceToBoundary(this);
+      if (d_new < h) {
+        ArrayList<Particle> reflected = b.reflectParticles(n_closest);
+        for (Particle p : reflected) {
+          PVector distance = PVector.sub(pos, p.pos);
+          insert_in_q(distance, p);
+        }
+
+        if (h < n_closest.get(n_closest.size() - 1).dist) {        
+          println("h before: ", h);
+          println("h after:  ", n_closest.get(n_closest.size() - 1).dist);
+        }
+        h = n_closest.get(n_closest.size() - 1).dist;
+      }
+    }
   }
+
+
 
   void nn_search_3d(Node node, int nn, ArrayList<Particle> particles) {
     ArrayList<NodeTuple> node_q_sorted = new ArrayList<NodeTuple>();

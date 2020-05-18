@@ -24,37 +24,49 @@ class Boundary { //<>//
     float t_nominator = (particle.pos.x - startPoint.x) * (startPoint.y - endPoint.y) - (particle.pos.y - startPoint.y)*(startPoint.x - endPoint.x);
     float t_denominator = (particle.pos.x - particle.temp_pos.x)*(startPoint.y - endPoint.y) - (particle.pos.y - particle.temp_pos.y)*(startPoint.x - endPoint.x);
     float t = t_nominator/t_denominator;
-    
+
     float u_nominator =  (particle.pos.x - particle.temp_pos.x)*(particle.pos.y - startPoint.y) - (particle.pos.y - particle.temp_pos.y)*(particle.pos.x - startPoint.x);
-    float u_denominator = (particle.pos.x - particle.temp_pos.x)*(startPoint.y - endPoint.y) - (particle.pos.y - particle.temp_pos.y)*(startPoint.x - endPoint.x);
-    float u = -u_nominator/u_denominator;
+    float u = -u_nominator/t_denominator;
 
     if (t_denominator == 0.0) {
       return false; // lines are parallel
     } else if (t <= 1.0 && t >= 0.0 && u <= 1.0 && u >= 0.0) {
 
       crossingPoint.set(particle.pos.x + t*(particle.temp_pos.x - particle.pos.x), particle.pos.y + t*(particle.temp_pos.y - particle.pos.y));
-      stroke(1, 1, 1);
-      //println(rho, max_rho);
-      strokeWeight(10);
-      float x = map(crossingPoint.x, 0, 1, -size/2, size/2);
-      float y = map(crossingPoint.y, 0, 1, -size/2, size/2);
-      point(x, y);
-      //println(t);
-
-
-
-      //println("Boundaries: ", startPoint, endPoint);
-      //println("Has crossed at: ", crossingPoint);
-      //println("Particle pos / Particle temp_pos", particle.pos, particle.temp_pos);
-      //println("Normal to boundary: ", normal);
-      //exit();
-
       return true;
     } else { 
       return false; // lines don't cross
     }
   }
+  
+  float distanceToBoundary(Particle particle){
+    PVector P1 = particle.pos;
+    PVector P2 = PVector.sub(P1, normal);
+    
+
+    float t_nominator = (P1.x - startPoint.x) * (startPoint.y - endPoint.y) - (P1.y - startPoint.y)*(startPoint.x - endPoint.x);
+    float t_denominator = (P1.x - P2.x)*(startPoint.y - endPoint.y) - (P1.y - P2.y)*(startPoint.x - endPoint.x);
+    float t = t_nominator/t_denominator;
+
+    float u_nominator =  (P1.x - P2.x)*(particle.pos.y - startPoint.y) - (P1.y - P2.y)*(P1.x - startPoint.x);
+    float u = -u_nominator/t_denominator;
+
+    if (t_denominator == 0.0) {
+      return MAX_FLOAT; // lines are parallel
+    } else if (t >= 0.0 && u <= 1 && u >= 0.0) {
+      crossingPoint.set(particle.pos.x + t*(particle.temp_pos.x - particle.pos.x), particle.pos.y + t*(particle.temp_pos.y - particle.pos.y));
+      return PVector.sub(crossingPoint, P1).mag();
+    } else { 
+      return MAX_FLOAT; // lines don't cross
+    }
+  }
+  
+  
+  
+  
+  
+  
+  
 
   void reflectAtBoundary(Particle particle) {
     // Reflect particle at the boundary
@@ -72,6 +84,33 @@ class Boundary { //<>//
       reflectAtBoundary(particle);
     }
   }
+
+
+  ArrayList<Particle> reflectParticles(ArrayList<ParticleTuple> neighbours) {
+    ArrayList<Particle> reflected = new ArrayList<Particle>();
+    for (ParticleTuple tup : neighbours) {
+      Particle p = tup.p;
+      
+      //dist = PVector.sub(pos, PVector.add(particles.get(i).pos, temp.offset));
+      
+      PVector pos = PVector.add(p.pos, tup.offset);
+      float nominator = (endPoint.y - startPoint.y) * pos.x - (endPoint.x - startPoint.x) * pos.y + endPoint.x * startPoint.y - endPoint.y * startPoint.x;
+      float denominator = pow(pow(endPoint.y - startPoint.y, 2) + pow(endPoint.x - startPoint.x, 2), 0.5);
+      float d = abs(nominator)/ denominator;
+      PVector newPos = PVector.add(pos, PVector.mult(normal, -2 * d));
+      
+      PVector tempPos = PVector.add(pos, p.vel);
+      nominator = (endPoint.y - startPoint.y) * tempPos.x - (endPoint.x - startPoint.x) * tempPos.y + endPoint.x * startPoint.y - endPoint.y * startPoint.x;
+      denominator = pow(pow(endPoint.y - startPoint.y, 2) + pow(endPoint.x - startPoint.x, 2), 0.5);
+      d = abs(nominator)/ denominator;
+      tempPos = PVector.add(tempPos, PVector.mult(normal, -2 * d));
+      PVector newVel = PVector.sub(tempPos, newPos);
+      Particle particle = new Particle(newPos, newVel, new PVector(0, 0), p.m, p.e);
+      reflected.add(particle);
+    }
+    return   reflected;
+  }
+
 
   void drawBoundary(int size) {
     float x1 = map(startPoint.x, 0, 1, -size/2, size/2);
