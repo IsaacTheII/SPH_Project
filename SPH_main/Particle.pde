@@ -11,6 +11,7 @@ class Particle {
   float h;
   float rho;
   float c_sound;
+  float pa;
   ArrayList<ParticleTuple> n_closest;
 
   Particle(PVector pos_, PVector vel_, PVector a_, float m_, float e_) {
@@ -221,7 +222,7 @@ class Particle {
 
 
   void calc_ae(float gamma, float sigma, boolean dim) {
-    float pa = pow(c_sound, 2)/(gamma * rho);
+    pa = pow(c_sound, 2)/(gamma * rho);
     for (ParticleTuple closest : n_closest) {
       float pb = pow(closest.p.c_sound, 2)/(gamma * closest.p.rho);
       float pi_ab = calc_viscosity(closest.p, closest.offset);
@@ -241,20 +242,19 @@ class Particle {
     }
   }
 
-  void show_2d(int size, float max_rho) {
-    float col = map(rho, 0, max_rho, 0, 1);
+  void show_2d(int size, float max_val) {
+    float col = map(pow(rho, 1), 0, pow(max_val, 1), 0, 1);
     stroke(col, 1, 1);
-    //println(rho, max_rho);
-    strokeWeight(map(pow(rho, 2), 0, pow(max_rho, 2), 5, 20));
+    strokeWeight(map(pow(rho, 1), 0, pow(max_val, 1), 5, 20));
     float x = map(pos.x, 0, 1, -size/2, size/2);
     float y = map(pos.y, 0, 1, -size/2, size/2);
-    point(x, y);    
+    point(x, y);
   }
 
-  void show_3d(int size, float max_rho) {
-    float col = map(rho, 0, max_rho, 0, 1);
+  void show_3d(int size, float max_val) {
+    float col = map(pow(rho, 1), 0, pow(max_val, 1), 0, 1);
     stroke(col, 1, 1);
-    strokeWeight(map(pow(rho, 2), 0, pow(max_rho, 2), 10, 20));
+    strokeWeight(map(pow(rho, 1), 0, pow(max_val, 1), 5, 20));
     float x = map(pos.x, 0, 1, -size/2, size/2);
     float y = map(pos.y, 0, 1, -size/2, size/2);
     float z = map(pos.z, 0, 1, -size/2, size/2);
