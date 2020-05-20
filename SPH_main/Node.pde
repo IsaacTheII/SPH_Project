@@ -64,9 +64,17 @@ class Node {
         left.show(size_);
       }
     } else {
+
+      if (Float.isNaN(rlow.x) || Float.isNaN(rlow.y) || Float.isNaN(rhigh.x) || Float.isNaN(rhigh.y)) {
+
+        println(rlow, rhigh);
+        exit();
+        
+      }
+
       float xl = map(rlow.x, 0, 1, -size_/2, size_/2);
       float yl = map(rlow.y, 0, 1, -size_/2, size_/2);
-      float xh = map(rhigh.x, 0, 1, -size_/2, size_/2);    
+      float xh = map(rhigh.x, 0, 1, -size_/2, size_/2);   
       float yh = map(rhigh.y, 0, 1, -size_/2, size_/2);
       rectMode(CORNERS);
       rect(xl, yl, xh, yh);

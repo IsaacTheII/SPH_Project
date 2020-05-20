@@ -4,9 +4,9 @@ float a = 0.;
 int leaf_size = 8;
 int speed_up = 1;
 int param = 0; // 2 = testing environment (low amount of particles), 1 = random, 0 = uniform
-int iter = 31;
+int iter = 27;
 float e_ini = 1;
-int nn = 32;
+int nn = 16;
 boolean dim = false;
 float courant = 0.05;
 int size = 1000;

@@ -1,3 +1,6 @@
+
+int particleOutOfBounds = 0;
+
 class Particle {
   PVector pos;
   PVector temp_pos;
@@ -13,7 +16,9 @@ class Particle {
   float c_sound;
   float pa;
   ArrayList<ParticleTuple> n_closest;
-  boolean reflected = false;
+  boolean isReflectedParticle;
+  boolean isOutOfBounds = false;
+  PVector posOld;
 
   Particle(PVector pos_, PVector vel_, PVector a_, float m_, float e_) {
     pos = pos_;
@@ -24,6 +29,7 @@ class Particle {
     m = m_;
     e = e_;
     e_pred = e_;
+    isReflectedParticle = false;
   }
 
 
@@ -84,13 +90,9 @@ class Particle {
     }
   }
 
-
-
-
-
-
   void nn_search_2d(Node node, int nn, ArrayList<Particle> particles, ArrayList<Boundary> boundaries) {
     ArrayList<NodeTuple> node_q_sorted = new ArrayList<NodeTuple>();
+
     //for (int x_off = -1; x_off < 2; x_off++) {
     //  for (int y_off = -1; y_off < 2; y_off++) {
     //    PVector offset = new PVector(x_off, y_off);
@@ -264,28 +266,40 @@ class Particle {
   void calc_ae(float gamma, float sigma, boolean dim) {
     pa = pow(c_sound, 2)/(gamma * rho);
     for (ParticleTuple closest : n_closest) {
-      float pb = pow(closest.p.c_sound, 2)/(gamma * closest.p.rho);
-      float pi_ab = calc_viscosity(closest.p, closest.offset);
-      PVector vab = PVector.sub(vel, closest.p.vel);
-      float Fab = pa + pb + pi_ab;
-      PVector contribution_a;
-      if (dim) {
-        contribution_a = grad_monoghan_kernel_3d(closest.dist, closest.offset, sigma);
-      } else {
-        contribution_a = grad_monoghan_kernel_2d(closest.dist, closest.offset, sigma);
-      }
-      a.add(PVector.mult(contribution_a, -0.5 * closest.p.m * Fab));
-      closest.p.a.add(PVector.mult(contribution_a, 0.5 * m * Fab));
+      if (!closest.p.isReflectedParticle) {
+        float pb = pow(closest.p.c_sound, 2)/(gamma * closest.p.rho);
+        float pi_ab = calc_viscosity(closest.p, closest.offset);
+        PVector vab = PVector.sub(vel, closest.p.vel);
+        float Fab = pa + pb + pi_ab;
+        PVector contribution_a;
+        if (dim) {
+          contribution_a = grad_monoghan_kernel_3d(closest.dist, closest.offset, sigma);
+        } else {
+          contribution_a = grad_monoghan_kernel_2d(closest.dist, closest.offset, sigma);
+        }
+        a.add(PVector.mult(contribution_a, -0.5 * closest.p.m * Fab));
+        closest.p.a.add(PVector.mult(contribution_a, 0.5 * m * Fab));
 
-      e_dot += closest.p.m * (pa + pi_ab) * vab.dot(PVector.mult(contribution_a, 0.5));
-      closest.p.e_dot += m * (pb + pi_ab) * vab.dot(PVector.mult(contribution_a, 0.5));
+        e_dot += closest.p.m * (pa + pi_ab) * vab.dot(PVector.mult(contribution_a, 0.5));
+        closest.p.e_dot += m * (pb + pi_ab) * vab.dot(PVector.mult(contribution_a, 0.5));
+      }
     }
   }
 
   void show_2d(int size, float max_val) {
     float col = map(pow(rho, 1), 0, pow(max_val, 1), 0, 1);
     stroke(col, 1, 1);
-    strokeWeight(map(pow(rho, 1), 0, pow(max_val, 1), 5, 20));
+    strokeWeight(map(pow(rho, 1), 0, pow(max_val, 1), 20, 5)); // inverted density mapping
+
+    if (Float.isNaN(pos.x) || Float.isNaN(pos.y)) {
+      if (!isOutOfBounds) {
+        println("Number of particles out of box: ", particleOutOfBounds++, posOld);
+        isOutOfBounds = true;
+      }
+    }
+
+    posOld = pos;
+
     float x = map(pos.x, 0, 1, -size/2, size/2);
     float y = map(pos.y, 0, 1, -size/2, size/2);
     point(x, y);

@@ -148,7 +148,8 @@ class Simulation {
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
       //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
       //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
-      boundaries.add(new Boundary(new PVector(0.4, 0.4), new PVector(0.6, 0.6)));
+      //boundaries.add(new Boundary(new PVector(0.4, 0.4), new PVector(0.6, 0.6)));
+      boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.4)));
     } else if (btype == 2) {
       // btype=0 combined with two line segment angled at 45 degrees each
       boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
@@ -160,13 +161,10 @@ class Simulation {
       //boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.3, 0.6)));
       //boundaries.add(new Boundary(new PVector(0.3, 0.4), new PVector(0.2, 0.5)));
     } else if (btype == 3) {
-      // btype=0 combined with two line segment angled at 45 degrees each
+      // btype=0 combined with a straight line element
       boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
-      //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
-      //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
-      boundaries.add(new Boundary(new PVector(0.5, 0.5), new PVector(0.6, 0.6)));
-      boundaries.add(new Boundary(new PVector(0.5, 0.5), new PVector(0.6, 0.4)));
+      boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.3, 0.4)));
     }
   }
 
@@ -370,7 +368,9 @@ class Simulation {
       for (Particle p : particles) {
         p.rho = 0;
         for (ParticleTuple tup : p.n_closest) {
-          p.rho += tup.p.m * p.monoghan_kernel_2d(tup.dist, sigma);
+          if (!tup.p.isReflectedParticle) {
+            p.rho += tup.p.m * p.monoghan_kernel_2d(tup.dist, sigma);
+          }
         }
         if (p.rho > max_val) {
           max_val = p.rho;
@@ -507,8 +507,6 @@ class Simulation {
     kick();
     drift2();
   }
-
-
 
   void show_particles() {
     root.show(size);

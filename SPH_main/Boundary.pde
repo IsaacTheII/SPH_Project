@@ -15,8 +15,8 @@ class Boundary { //<>//
     //normal = new PVector(startPoint.x - endPoint.x, startPoint.y - endPoint.y);
     //normal = new PVector(startPoint.y - endPoint.y, startPoint.x - endPoint.x);
     normal = new PVector(startPoint.y - endPoint.y, endPoint.x - startPoint.x);
-    normal.mult(1/normal.mag());
-    crossingPoint = new PVector();
+    normal.div(normal.mag());
+    crossingPoint = new PVector();    
   }
 
   boolean hasCrossed(Particle particle) {
@@ -40,10 +40,10 @@ class Boundary { //<>//
   }
   
   float distanceToBoundary(Particle particle){
+    
     PVector P1 = particle.pos;
     PVector P2 = PVector.sub(P1, normal);
     
-
     float t_nominator = (P1.x - startPoint.x) * (startPoint.y - endPoint.y) - (P1.y - startPoint.y)*(startPoint.x - endPoint.x);
     float t_denominator = (P1.x - P2.x)*(startPoint.y - endPoint.y) - (P1.y - P2.y)*(startPoint.x - endPoint.x);
     float t = t_nominator/t_denominator;
@@ -53,7 +53,7 @@ class Boundary { //<>//
 
     if (t_denominator == 0.0) {
       return MAX_FLOAT; // lines are parallel
-    } else if (t >= 0.0 && u <= 1 && u >= 0.0) {
+    } else if (t <= 1.0 && t >= 0.0 && u <= 1 && u >= 0.0) {
       crossingPoint.set(particle.pos.x + t*(particle.temp_pos.x - particle.pos.x), particle.pos.y + t*(particle.temp_pos.y - particle.pos.y));
       return PVector.sub(crossingPoint, P1).mag();
     } else { 
@@ -61,13 +61,6 @@ class Boundary { //<>//
     }
   }
   
-  
-  
-  
-  
-  
-  
-
   void reflectAtBoundary(Particle particle) {
     // Reflect particle at the boundary
     PVector overShoot = PVector.sub(particle.temp_pos, crossingPoint);
@@ -85,7 +78,6 @@ class Boundary { //<>//
     }
   }
 
-
   ArrayList<Particle> reflectParticles(ArrayList<ParticleTuple> neighbours) {
     ArrayList<Particle> reflected = new ArrayList<Particle>();
     for (ParticleTuple tup : neighbours) {
@@ -93,7 +85,7 @@ class Boundary { //<>//
       
       //dist = PVector.sub(pos, PVector.add(particles.get(i).pos, temp.offset));
       
-      PVector pos = PVector.add(p.pos, tup.offset);
+      PVector pos = PVector.sub(p.pos, tup.offset); // changed from "add" to "sub" -> seems to work (symmetrical behaviour)
       float nominator = (endPoint.y - startPoint.y) * pos.x - (endPoint.x - startPoint.x) * pos.y + endPoint.x * startPoint.y - endPoint.y * startPoint.x;
       float denominator = pow(pow(endPoint.y - startPoint.y, 2) + pow(endPoint.x - startPoint.x, 2), 0.5);
       float d = abs(nominator)/ denominator;
@@ -106,9 +98,10 @@ class Boundary { //<>//
       tempPos = PVector.add(tempPos, PVector.mult(normal, -2 * d));
       PVector newVel = PVector.sub(tempPos, newPos);
       Particle particle = new Particle(newPos, newVel, new PVector(0, 0), p.m, p.e);
+      particle.isReflectedParticle = true;
       reflected.add(particle);
     }
-    return   reflected;
+    return reflected;
   }
 
 
