@@ -100,11 +100,13 @@ class Particle {
     //  }
     //}
 
-    for (int x_off = -1; x_off < 2; x_off++) {
-      PVector offset = new PVector(x_off, 0);
-      node_q_sorted = insert_into_sort_list(node_q_sorted, new NodeTuple(node, node.min_node_dist_pb(pos, offset), offset));
-    }
+    //for (int x_off = -1; x_off < 2; x_off++) {
+    //  PVector offset = new PVector(x_off, 0);
+    //  node_q_sorted = insert_into_sort_list(node_q_sorted, new NodeTuple(node, node.min_node_dist_pb(pos, offset), offset));
+    //}
 
+    PVector offset = new PVector(0, 0);
+    node_q_sorted = insert_into_sort_list(node_q_sorted, new NodeTuple(node, node.min_node_dist_pb(pos, offset), offset));
 
     n_closest = new ArrayList<ParticleTuple>();
     for (int i = 0; i <= nn; i++) {
@@ -155,8 +157,6 @@ class Particle {
       }
     }
   }
-
-
 
   void nn_search_3d(Node node, int nn, ArrayList<Particle> particles) {
     ArrayList<NodeTuple> node_q_sorted = new ArrayList<NodeTuple>();
@@ -287,9 +287,15 @@ class Particle {
   }
 
   void show_2d(int size, float max_val) {
-    float col = map(pow(rho, 1), 0, pow(max_val, 1), 0, 1);
-    stroke(col, 1, 1);
-    strokeWeight(map(pow(rho, 1), 0, pow(max_val, 1), 20, 5)); // inverted density mapping
+    if (!isReflectedParticle) {
+      float col = map(pow(rho, 1), 0, pow(max_val, 1), 0, 1);
+      stroke(col, 1, 1);
+      strokeWeight(map(pow(rho, 1), 0, pow(max_val, 1), 20, 5)); // inverted density mapping
+
+      float x = map(pos.x, 0, 1, -size/2, size/2);
+      float y = map(pos.y, 0, 1, -size/2, size/2);
+      point(x, y);
+    }
 
     if (Float.isNaN(pos.x) || Float.isNaN(pos.y)) {
       if (!isOutOfBounds) {
@@ -297,12 +303,7 @@ class Particle {
         isOutOfBounds = true;
       }
     }
-
     posOld = pos;
-
-    float x = map(pos.x, 0, 1, -size/2, size/2);
-    float y = map(pos.y, 0, 1, -size/2, size/2);
-    point(x, y);
   }
 
   void show_3d(int size, float max_val) {

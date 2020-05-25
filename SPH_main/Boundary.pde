@@ -5,8 +5,9 @@ class Boundary { //<>//
   PVector boundaryVector;
   PVector normal;
   PVector crossingPoint;  
+  PVector center;
   float det;
-
+  boolean isStationary = true;
 
   Boundary(PVector startPoint_, PVector endPoint_) {
     startPoint = startPoint_;
@@ -16,7 +17,8 @@ class Boundary { //<>//
     //normal = new PVector(startPoint.y - endPoint.y, startPoint.x - endPoint.x);
     normal = new PVector(startPoint.y - endPoint.y, endPoint.x - startPoint.x);
     normal.div(normal.mag());
-    crossingPoint = new PVector();    
+    crossingPoint = new PVector();
+    center = PVector.div(PVector.add(startPoint, endPoint), 2);
   }
 
   boolean hasCrossed(Particle particle) {
@@ -38,12 +40,12 @@ class Boundary { //<>//
       return false; // lines don't cross
     }
   }
-  
-  float distanceToBoundary(Particle particle){
-    
+
+  float distanceToBoundary(Particle particle) {
+
     PVector P1 = particle.pos;
     PVector P2 = PVector.sub(P1, normal);
-    
+
     float t_nominator = (P1.x - startPoint.x) * (startPoint.y - endPoint.y) - (P1.y - startPoint.y)*(startPoint.x - endPoint.x);
     float t_denominator = (P1.x - P2.x)*(startPoint.y - endPoint.y) - (P1.y - P2.y)*(startPoint.x - endPoint.x);
     float t = t_nominator/t_denominator;
@@ -60,7 +62,7 @@ class Boundary { //<>//
       return MAX_FLOAT; // lines don't cross
     }
   }
-  
+
   void reflectAtBoundary(Particle particle) {
     // Reflect particle at the boundary
     PVector overShoot = PVector.sub(particle.temp_pos, crossingPoint);
@@ -82,15 +84,15 @@ class Boundary { //<>//
     ArrayList<Particle> reflected = new ArrayList<Particle>();
     for (ParticleTuple tup : neighbours) {
       Particle p = tup.p;
-      
+
       //dist = PVector.sub(pos, PVector.add(particles.get(i).pos, temp.offset));
-      
+
       PVector pos = PVector.sub(p.pos, tup.offset); // changed from "add" to "sub" -> seems to work (symmetrical behaviour)
       float nominator = (endPoint.y - startPoint.y) * pos.x - (endPoint.x - startPoint.x) * pos.y + endPoint.x * startPoint.y - endPoint.y * startPoint.x;
       float denominator = pow(pow(endPoint.y - startPoint.y, 2) + pow(endPoint.x - startPoint.x, 2), 0.5);
       float d = abs(nominator)/ denominator;
       PVector newPos = PVector.add(pos, PVector.mult(normal, -2 * d));
-      
+
       PVector tempPos = PVector.add(pos, p.vel);
       nominator = (endPoint.y - startPoint.y) * tempPos.x - (endPoint.x - startPoint.x) * tempPos.y + endPoint.x * startPoint.y - endPoint.y * startPoint.x;
       denominator = pow(pow(endPoint.y - startPoint.y, 2) + pow(endPoint.x - startPoint.x, 2), 0.5);
@@ -104,6 +106,34 @@ class Boundary { //<>//
     return reflected;
   }
 
+  void rotateBoundary(float alpha) { // rotate a (line segment) boundary around its center point (in 2D)
+
+    float s = sin(alpha);
+    float c = cos(alpha);
+
+    // translate point back to origin:
+    startPoint.x -= center.x;
+    startPoint.y -= center.y;
+    endPoint.x -= center.x;
+    endPoint.y -= center.y;
+
+    // rotate point around origin
+    float newStartPointx = startPoint.x * c - startPoint.y * s;
+    float newStartPointy = startPoint.x * s + startPoint.y * c;
+    float newEndPointx = endPoint.x * c - endPoint.y * s;
+    float newEndPointy = endPoint.x * s + endPoint.y * c;
+
+    // translate point back:
+    startPoint.x = newStartPointx + center.x;
+    startPoint.y = newStartPointy + center.y;
+    endPoint.x = newEndPointx + center.x;
+    endPoint.y = newEndPointy + center.y;
+    
+    // update normal vector
+    normal = new PVector(startPoint.y - endPoint.y, endPoint.x - startPoint.x);
+    normal.div(normal.mag());
+    center = PVector.div(PVector.add(startPoint, endPoint), 2);
+  }
 
   void drawBoundary(int size) {
     float x1 = map(startPoint.x, 0, 1, -size/2, size/2);

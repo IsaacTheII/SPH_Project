@@ -1,4 +1,4 @@
-class Simulation {
+class Simulation { //<>//
   int leaf_size;
   int num_particles;
   int iter;
@@ -15,6 +15,7 @@ class Simulation {
   float dt = 0;
   float max_val = 0;
   float v_ini;
+  float rotationSpeed = 0.002;
   int btype;
   ArrayList<Boundary> boundaries;
 
@@ -137,13 +138,13 @@ class Simulation {
   void createBoundaries() {
 
     if (btype == 0) { 
-      // normal upper and lower boundaries
+      // normal upper and lower boundaries (base)
       boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
       //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
       //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
     } else if (btype == 1) {
-      // btype=0 combined with a line segment angled at 45 degrees
+      // base combined with a line segment angled at 45 degrees
       boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
       //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
@@ -151,7 +152,7 @@ class Simulation {
       //boundaries.add(new Boundary(new PVector(0.4, 0.4), new PVector(0.6, 0.6)));
       boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.4)));
     } else if (btype == 2) {
-      // btype=0 combined with two line segment angled at 45 degrees each
+      // base combined with two line segment angled at 45 degrees each
       boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
       //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
@@ -161,10 +162,37 @@ class Simulation {
       //boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.3, 0.6)));
       //boundaries.add(new Boundary(new PVector(0.3, 0.4), new PVector(0.2, 0.5)));
     } else if (btype == 3) {
-      // btype=0 combined with a straight line element
+      // base combined with a straight line element
       boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
       boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.3, 0.4)));
+    } else if (btype == 4) {
+      // base combined with simplified "rocket thruster" with iterative particle placement
+      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(0.4, 0.45)));
+      boundaries.add(new Boundary(new PVector(0.0, 1.0), new PVector(0.4, 0.55)));
+      boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.6, 0.4)));
+      boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.6, 0.6)));
+
+      // Reversely orientated boundaries. Not necessary?
+      boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.0, 1.0)));
+      boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.45)));
+      boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55)));
+    } else if (btype == 5) {
+      // rotating line element
+      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
+
+      Boundary b1 = new Boundary(new PVector(0.4, 0.7), new PVector(0.4, 0.3));
+      b1.isStationary = false;
+      boundaries.add(b1);
+
+      // Reversely orientated boundary
+      Boundary b2 = new Boundary(new PVector(0.4, 0.3), new PVector(0.4, 0.7));
+      b2.isStationary = false;
+      boundaries.add(b2);
     }
   }
 
@@ -270,8 +298,6 @@ class Simulation {
     return 0;
   }
 
-
-
   int partition(int start, int end, float v, int dim) {
     int i = start;
     int j = end - 1;
@@ -375,6 +401,7 @@ class Simulation {
         if (p.rho > max_val) {
           max_val = p.rho;
         }
+        // add small positive number to rho to avoid zero density
       }
     }
   }
@@ -442,9 +469,11 @@ class Simulation {
       if (p.pos.x >= 1.0) {
         p.pos.set(0.0, random(1));
         p.vel.set(v_ini, 0);
+        reset_e();
       } else if (p.pos.x <= 0.0) {
-        p.pos.set(1, random(1));
-        p.vel.set(-v_ini, 0);
+        p.pos.set(0.0, random(1));
+        p.vel.set(v_ini, 0);
+        reset_e();
       }
       //if (p.pos.y > 1.0) {
       //  p.pos.set(p.pos.x, 2 - p.pos.y);
@@ -466,7 +495,6 @@ class Simulation {
 
       // Check if crossed a bounary
       for (Boundary b : boundaries) {
-        //println("Drift1: Current boundary: ", b.startPoint, b.endPoint);
         b.checkBoundary(p);
       }
       p.pos = p.temp_pos;
@@ -484,7 +512,6 @@ class Simulation {
 
       // Checked if crossed a boundary
       for (Boundary b : boundaries) {
-        //println("Drift2: Current boundary: ", b.startPoint, b.endPoint);
         b.checkBoundary(p);
       }
       p.pos = p.temp_pos;
@@ -497,11 +524,19 @@ class Simulation {
       p.vel.add(PVector.mult(p.a, dt));
       p.e += p.e_dot * dt;
 
-      //p.vel.add(0, 1 * dt);
+      //p.vel.add(0, v_ini * dt);
     }
   }
 
   void update() {
+    //if (btype == 5) {
+    //  // rotate the line segment
+    //  for (Boundary b : boundaries) {
+    //    if (!b.isStationary) {
+    //      b.rotateBoundary(rotationSpeed);
+    //    }
+    //  }
+    //}
     drift1();
     calc_forces();
     kick();
