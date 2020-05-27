@@ -13,11 +13,13 @@ class Simulation { //<>//
   int size;
   float t_global = 0;
   float dt = 0;
-  float max_val = 0;
+  float max_val = 10;
   float v_ini;
   float rotationSpeed = 0.002;
   int btype;
   ArrayList<Boundary> boundaries;
+  PVector rlow = getRlow();
+  PVector rhigh = getRhigh();
 
   Simulation(int leaf_size_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_) {
     leaf_size = leaf_size_;
@@ -32,7 +34,7 @@ class Simulation { //<>//
     boundaries = new ArrayList<Boundary>();
 
     if (dim) {
-      gamma = 5./3.;
+      gamma = 5./3.; // gamma = (f+2)/f , f = number of degrees of freedom
       sigma = 8./PI;
       num_particles = int(pow(iter, 3));
     } else {
@@ -41,9 +43,7 @@ class Simulation { //<>//
       num_particles = int(pow(iter, 2));
     }
     particles = new ArrayList<Particle>();
-    PVector rlow = getRlow();
-    PVector rhigh = getRhigh();
-    root = new Node(0, num_particles, rlow, rhigh, dim);
+    root = new Node(0, 10, rlow, rhigh, dim); // hardcoded 10 particles to start with btype = 5
     read_data(param_);
     createBoundaries();
   }
@@ -98,7 +98,7 @@ class Simulation { //<>//
         }
       }
     } else {
-      if (param == 1) {
+      if (param == 1 && btype != 5) {
         for (int i = 0; i < num_particles-1; i++) {
           float x = random(1);
           float y = random(1);
@@ -107,7 +107,7 @@ class Simulation { //<>//
         }
         Particle particle = new Particle(new PVector(0.5, 0.5), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, e_ini);
         particles.add(particle);
-      } else if (param == 2) {
+      } else if (param == 2 && btype != 5) {
         for (int i = 0; i < num_particles-1; i++) {
           float x = random(1);
           float y = random(1);
@@ -116,7 +116,7 @@ class Simulation { //<>//
         }
         Particle particle = new Particle(new PVector(0.01, 0.5), new PVector(v_ini, -v_ini), new PVector(0.0, 0.0), 1./num_particles, 1);
         particles.add(particle);
-      } else if (param == 0) {
+      } else if (param == 0 && btype != 5) {
         float spacing = 1. / iter;
         for (int x = 0; x < iter; x++) {
           for (int y = 0; y < iter; y++) {
@@ -129,6 +129,14 @@ class Simulation { //<>//
               particles.add(particle);
             }
           }
+        }
+      } else if (btype == 5) {
+        println("Generating just a few particles.");
+        for (int i = 0; i < 10; i++) {
+          float x = random(1);
+          float y = random(1);
+          Particle particle = new Particle(new PVector(x, y), new PVector(0.0, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1);
+          particles.add(particle);
         }
       }
     }
@@ -181,18 +189,19 @@ class Simulation { //<>//
       boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.45)));
       boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55)));
     } else if (btype == 5) {
-      // rotating line element
+      // same as btype = 4
       boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
       boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(0.4, 0.45)));
+      boundaries.add(new Boundary(new PVector(0.0, 1.0), new PVector(0.4, 0.55)));
+      boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.6, 0.4)));
+      boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.6, 0.6)));
 
-      Boundary b1 = new Boundary(new PVector(0.4, 0.7), new PVector(0.4, 0.3));
-      b1.isStationary = false;
-      boundaries.add(b1);
-
-      // Reversely orientated boundary
-      Boundary b2 = new Boundary(new PVector(0.4, 0.3), new PVector(0.4, 0.7));
-      b2.isStationary = false;
-      boundaries.add(b2);
+      // Reversely orientated boundaries. Not necessary?
+      boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.0, 0.0)));
+      boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.0, 1.0)));
+      boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.45)));
+      boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55)));
     }
   }
 
@@ -222,6 +231,10 @@ class Simulation { //<>//
     if (dimension == 0) {
       v = node.center.x;
       s = partition(node.start, node.end, v, dimension);
+      if (s == node.start && s == node.end) {
+        println("s = node.start = node.end");
+        exit();
+      }
       if ((s > node.start) && (s < node.end)) {
         PVector rhigh = node.rhigh.copy();
         PVector rlow = node.rlow.copy();
@@ -247,6 +260,10 @@ class Simulation { //<>//
     } else if (dimension == 1) {
       v = node.center.y;
       s = partition(node.start, node.end, v, dimension);
+      if (s == node.start && s == node.end) {
+        println("s = node.start = node.end");
+        exit();
+      }
       if ((s > node.start) && (s < node.end)) {
         PVector rhigh = node.rhigh.copy();
         PVector rlow = node.rlow.copy();
@@ -270,6 +287,8 @@ class Simulation { //<>//
         treeBuild(node, nexdim);
       }
     } else {
+      println("3rd dimension cut?");
+      exit();
       v = node.center.z;
       s = partition(node.start, node.end, v, dimension);
       if ((s > node.start) && (s < node.end)) {
@@ -379,7 +398,6 @@ class Simulation { //<>//
         p.nn_search_2d(root, nn, particles, boundaries);
       }
     }
-    max_val = 0.;
     if (dim) {
       for (Particle p : particles) {
         p.rho = 0;
@@ -529,14 +547,12 @@ class Simulation { //<>//
   }
 
   void update() {
-    //if (btype == 5) {
-    //  // rotate the line segment
-    //  for (Boundary b : boundaries) {
-    //    if (!b.isStationary) {
-    //      b.rotateBoundary(rotationSpeed);
-    //    }
-    //  }
-    //}
+    if (btype == 5) {
+      float x = random(0, 0.1);
+      float y = random(0.3, 0.7);
+      particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
+      this.root = new Node(0, particles.size(), rlow, rhigh, dim);
+    }
     drift1();
     calc_forces();
     kick();
