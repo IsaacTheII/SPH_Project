@@ -1,4 +1,4 @@
-class Simulation { //<>//
+class Simulation { //<>// //<>// //<>// //<>// //<>//
   int leaf_size;
   int num_particles;
   int iter;
@@ -18,8 +18,9 @@ class Simulation { //<>//
   float rotationSpeed = 0.002;
   int btype;
   ArrayList<Boundary> boundaries;
-  PVector rlow = getRlow();
-  PVector rhigh = getRhigh();
+  PVector rlow;
+  PVector rhigh;
+  ArrayList<Particle> garbage_colleciton = new ArrayList<Particle>();
 
   Simulation(int leaf_size_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_) {
     leaf_size = leaf_size_;
@@ -43,6 +44,8 @@ class Simulation { //<>//
       num_particles = int(pow(iter, 2));
     }
     particles = new ArrayList<Particle>();
+    rlow = getRlow();
+    rhigh = getRhigh();
     root = new Node(0, 10, rlow, rhigh, dim); // hardcoded 10 particles to start with btype = 5
     read_data(param_);
     createBoundaries();
@@ -190,16 +193,28 @@ class Simulation { //<>//
       boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55)));
     } else if (btype == 5) {
       // same as btype = 4
-      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
-      boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
-      boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(0.4, 0.45)));
-      boundaries.add(new Boundary(new PVector(0.0, 1.0), new PVector(0.4, 0.55)));
-      boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.6, 0.4)));
-      boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.6, 0.6)));
+      //combustion champer
+      boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.4, 0.45)));
+      boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.4, 0.55)));
+      boundaries.add(new Boundary(new PVector(0.09, 0.3), new PVector(0.31, 0.3)));
+      boundaries.add(new Boundary(new PVector(0.09, 0.7), new PVector(0.31, 0.7)));
+      boundaries.add(new Boundary(new PVector(0.1, 0.3), new PVector(0.1, 0.7)));
+      boundaries.add(new Boundary(new PVector(0.1, 0.45), new PVector(0.1, 0.6)));
+      boundaries.add(new Boundary(new PVector(0.1, 0.65), new PVector(0.1, 0.7)));
+
+      //methan oxygen pipes
+      //boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.6, 0.4)));
+      //boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.6, 0.6)));
+
+      //nozzle
+
+
+
+
 
       // Reversely orientated boundaries. Not necessary?
-      boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.0, 0.0)));
-      boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.0, 1.0)));
+      //boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.0, 0.0)));
+      //boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.0, 1.0)));
       boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.45)));
       boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55)));
     }
@@ -215,6 +230,11 @@ class Simulation { //<>//
 
 
   int treeBuild(Node node, int dimension) {
+    node.deepth++;
+    println(node.deepth);
+    if (node.deepth == 10) {
+      println("pause", node.center, node.rlow, node.rhigh);
+    }
     if (node.isleaf(leaf_size)) {
       //for (int i = node.start; i < node.end; i++) {
       //  Particle p = particles.get(i);
@@ -252,9 +272,11 @@ class Simulation { //<>//
         //node.cm = PVector.div(PVector.add(leftcm, rightcm), node.m);
       } else if (!(s > node.start)) {
         node.rlow.x = v;
+        node.center = PVector.div(PVector.add(node.rlow, node.rhigh), 2);
         treeBuild(node, nexdim);
       } else if (!(s < node.end)) {
         node.rhigh.x = v;
+        node.center = PVector.div(PVector.add(node.rlow, node.rhigh), 2);
         treeBuild(node, nexdim);
       }
     } else if (dimension == 1) {
@@ -281,9 +303,11 @@ class Simulation { //<>//
         //node.cm = PVector.div(PVector.add(leftcm, rightcm), node.m);
       } else if (!(s > node.start)) {
         node.rlow.y = v;
+        node.center = PVector.div(PVector.add(node.rlow, node.rhigh), 2);
         treeBuild(node, nexdim);
       } else if (!(s < node.end)) {
         node.rhigh.y = v;
+        node.center = PVector.div(PVector.add(node.rlow, node.rhigh), 2);
         treeBuild(node, nexdim);
       }
     } else {
@@ -308,9 +332,11 @@ class Simulation { //<>//
         //node.cm = PVector.div(PVector.add(leftcm, rightcm), node.m);
       } else if (!(s > node.start)) {
         node.rlow.z = v;
+        node.center = PVector.div(PVector.add(node.rlow, node.rhigh), 2);
         treeBuild(node, nexdim);
       } else if (!(s < node.end)) {
         node.rhigh.z = v;
+        node.center = PVector.div(PVector.add(node.rlow, node.rhigh), 2);
         treeBuild(node, nexdim);
       }
     }
@@ -320,6 +346,10 @@ class Simulation { //<>//
   int partition(int start, int end, float v, int dim) {
     int i = start;
     int j = end - 1;
+
+    if (j >= particles.size()) {
+      println("j ", j, start, end, v);
+    }
 
     if (dim == 0) {
       while ((i <= j) && (particles.get(i).pos.x < v)) {
@@ -409,6 +439,7 @@ class Simulation { //<>//
         }
       }
     } else {
+      max_val = 0;
       for (Particle p : particles) {
         p.rho = 0;
         for (ParticleTuple tup : p.n_closest) {
@@ -478,11 +509,16 @@ class Simulation { //<>//
   }
 
   void boundary_condtions(Particle p) {
-    //if(p.pos.y >= .98 || p.pos.y <= .04) p.vel.y *= -1;
-    //if(p.pos.x >= .98 || p.pos.x <= .04) p.vel.x *= -1;
 
     if (dim) {
       p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
+    } else if (!dim && btype == 5) {
+      if (p.pos.x > 1.0 || p.pos.x < 0.0) {
+        garbage_colleciton.add(p);
+      }
+      if (p.pos.y > 1.0 || p.pos.y < 0.0) {
+        garbage_colleciton.add(p);
+      }
     } else {
       if (p.pos.x >= 1.0) {
         p.pos.set(0.0, random(1));
@@ -502,6 +538,16 @@ class Simulation { //<>//
       //}
       //p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1.);
       //p.pos.set(p.pos.x, (p.pos.y + 1) % 1.);
+    }
+  }
+
+  void ignite() {
+    for (Particle p : particles) {
+      if ( p.pos.x > .38 && p.pos.x < .42) {
+        if ( p.pos.y > 0.48 && p.pos.y < 0.52) {
+          p.e = 50;
+        }
+      }
     }
   }
 
@@ -547,12 +593,18 @@ class Simulation { //<>//
   }
 
   void update() {
-    if (btype == 5) {
-      float x = random(0, 0.1);
-      float y = random(0.3, 0.7);
+    println("particel list size before", particles.size());
+    particles.removeAll(garbage_colleciton);
+    garbage_colleciton.clear();
+    if (btype == 5 && max_val <= 40) {
+      float x = random(0.15, 0.2);
+      float y = random(0.4, 0.5);
       particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
-      this.root = new Node(0, particles.size(), rlow, rhigh, dim);
+      println("particel list size after", particles.size());
+      ignite();
     }
+    this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(1, 1), dim);
+
     drift1();
     calc_forces();
     kick();

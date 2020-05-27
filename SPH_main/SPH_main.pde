@@ -22,7 +22,7 @@ Simulation sim;
 PeasyCam cam;
 
 void setup() {
-  size(1200, 1200, P3D);
+  size(1000, 1000, P3D);
   colorMode(HSB, 1);
   smooth();
 
@@ -46,16 +46,16 @@ void draw() {
     a += 0.002;
   }
 
-  // implement constant time per frame here instead of calculations per frame
-  //int counter = 0;
-  //while (frame_dt < dt_thresh) {
-  //  sim.update();
-  //  frame_dt += sim.dt;
-  //  counter++;
-  //  total_framecount++;
-  //  if (total_framecount % 1000 == 0) sim.reset_e();
-  //}
-  //println(counter);
+   //implement constant time per frame here instead of calculations per frame
+  int counter = 0;
+  while (frame_dt < dt_thresh) {
+    sim.update();
+    frame_dt += sim.dt;
+    counter++;
+    total_framecount++;
+    if (total_framecount % 1000 == 0) sim.reset_e();
+  }
+  println(counter);
   total_framecount++;
   if (total_framecount % 100 == 0) sim.reset_e();
   sim.update();

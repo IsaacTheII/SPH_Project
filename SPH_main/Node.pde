@@ -12,6 +12,7 @@ class Node {
   float size;
   boolean leaf = false;
   boolean dim;
+  int deepth = 0;
 
   Node(int start_, int end_, final PVector rlow_, final PVector rhigh_, boolean dim_) {
     start = start_;
