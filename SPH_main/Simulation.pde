@@ -199,8 +199,8 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
       boundaries.add(new Boundary(new PVector(0.09, 0.3), new PVector(0.31, 0.3)));
       boundaries.add(new Boundary(new PVector(0.09, 0.7), new PVector(0.31, 0.7)));
       boundaries.add(new Boundary(new PVector(0.1, 0.3), new PVector(0.1, 0.7)));
-      boundaries.add(new Boundary(new PVector(0.1, 0.45), new PVector(0.1, 0.6)));
-      boundaries.add(new Boundary(new PVector(0.1, 0.65), new PVector(0.1, 0.7)));
+      //boundaries.add(new Boundary(new PVector(0.1, 0.45), new PVector(0.1, 0.6)));
+      //boundaries.add(new Boundary(new PVector(0.1, 0.65), new PVector(0.1, 0.7)));
 
       //methan oxygen pipes
       //boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.6, 0.4)));
@@ -230,11 +230,6 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
 
 
   int treeBuild(Node node, int dimension) {
-    node.deepth++;
-    println(node.deepth);
-    if (node.deepth == 10) {
-      println("pause", node.center, node.rlow, node.rhigh);
-    }
     if (node.isleaf(leaf_size)) {
       //for (int i = node.start; i < node.end; i++) {
       //  Particle p = particles.get(i);
@@ -251,10 +246,6 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     if (dimension == 0) {
       v = node.center.x;
       s = partition(node.start, node.end, v, dimension);
-      if (s == node.start && s == node.end) {
-        println("s = node.start = node.end");
-        exit();
-      }
       if ((s > node.start) && (s < node.end)) {
         PVector rhigh = node.rhigh.copy();
         PVector rlow = node.rlow.copy();
@@ -282,10 +273,6 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     } else if (dimension == 1) {
       v = node.center.y;
       s = partition(node.start, node.end, v, dimension);
-      if (s == node.start && s == node.end) {
-        println("s = node.start = node.end");
-        exit();
-      }
       if ((s > node.start) && (s < node.end)) {
         PVector rhigh = node.rhigh.copy();
         PVector rlow = node.rlow.copy();
@@ -346,10 +333,6 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   int partition(int start, int end, float v, int dim) {
     int i = start;
     int j = end - 1;
-
-    if (j >= particles.size()) {
-      println("j ", j, start, end, v);
-    }
 
     if (dim == 0) {
       while ((i <= j) && (particles.get(i).pos.x < v)) {
@@ -545,7 +528,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     for (Particle p : particles) {
       if ( p.pos.x > .38 && p.pos.x < .42) {
         if ( p.pos.y > 0.48 && p.pos.y < 0.52) {
-          p.e = 50;
+          p.e = 1;
         }
       }
     }
@@ -593,15 +576,13 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   }
 
   void update() {
-    println("particel list size before", particles.size());
     particles.removeAll(garbage_colleciton);
     garbage_colleciton.clear();
-    if (btype == 5 && max_val <= 40) {
+    if (btype == 5 && max_val <= 20) {
       float x = random(0.15, 0.2);
-      float y = random(0.4, 0.5);
-      particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
-      println("particel list size after", particles.size());
-      ignite();
+      float y = random(0.4, 0.6);
+      particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 50));
+      //ignite();
     }
     this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(1, 1), dim);
 

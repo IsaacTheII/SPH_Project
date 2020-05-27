@@ -288,7 +288,7 @@ class Particle {
 
   void show_2d(int size, float max_val) {
     if (!isReflectedParticle) {
-      float col = map(pow(rho, 1), 0, pow(max_val, 1), 0, 1);
+      float col = map(vel.mag(), 0, 15, 0, .2);
       stroke(col, 1, 1);
       strokeWeight(map(pow(rho, 1), 0, pow(max_val, 1), 20, 5)); // inverted density mapping
 

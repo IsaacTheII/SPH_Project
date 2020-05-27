@@ -13,7 +13,7 @@ int size = 1000;
 float v_ini = 2;
 int btype = 5;
 float frame_dt = 0.;
-float dt_thresh = 0.0025;
+float dt_thresh = 0.001;
 int total_framecount = 0;
 
 
@@ -62,4 +62,5 @@ void draw() {
 
   sim.show_particles();
   frame_dt = frame_dt%dt_thresh;
+  saveFrame("movie/SPH_#####.jpg"); //<>//
 }

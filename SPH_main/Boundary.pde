@@ -25,14 +25,15 @@ class Boundary { //<>//
 
     float t_nominator = (particle.pos.x - startPoint.x) * (startPoint.y - endPoint.y) - (particle.pos.y - startPoint.y)*(startPoint.x - endPoint.x);
     float t_denominator = (particle.pos.x - particle.temp_pos.x)*(startPoint.y - endPoint.y) - (particle.pos.y - particle.temp_pos.y)*(startPoint.x - endPoint.x);
+
+    if (abs(t_denominator) == 0.0) return false; // lines are parallel 
+
     float t = t_nominator/t_denominator;
 
     float u_nominator =  (particle.pos.x - particle.temp_pos.x)*(particle.pos.y - startPoint.y) - (particle.pos.y - particle.temp_pos.y)*(particle.pos.x - startPoint.x);
     float u = -u_nominator/t_denominator;
 
-    if (t_denominator == 0.0) {
-      return false; // lines are parallel
-    } else if (t <= 1.0 && t >= 0.0 && u <= 1.0 && u >= 0.0) {
+    if (t <= 1.0 + 1e-6 && t >= 0.0 - 1e-6 && u <= 1.0 + 1e-6 && u >= 0.0 - 1e-6) {
 
       crossingPoint.set(particle.pos.x + t*(particle.temp_pos.x - particle.pos.x), particle.pos.y + t*(particle.temp_pos.y - particle.pos.y));
       return true;
@@ -48,14 +49,16 @@ class Boundary { //<>//
 
     float t_nominator = (P1.x - startPoint.x) * (startPoint.y - endPoint.y) - (P1.y - startPoint.y)*(startPoint.x - endPoint.x);
     float t_denominator = (P1.x - P2.x)*(startPoint.y - endPoint.y) - (P1.y - P2.y)*(startPoint.x - endPoint.x);
+
+    if (t_denominator == 0.0) return MAX_FLOAT; // lines are parallel
+
     float t = t_nominator/t_denominator;
 
     float u_nominator =  (P1.x - P2.x)*(particle.pos.y - startPoint.y) - (P1.y - P2.y)*(P1.x - startPoint.x);
     float u = -u_nominator/t_denominator;
 
-    if (t_denominator == 0.0) {
-      return MAX_FLOAT; // lines are parallel
-    } else if (t <= 1.0 && t >= 0.0 && u <= 1 && u >= 0.0) {
+
+    if (t <= 1.0 + 1e-6 && t >= 0.0 - 1e-6 && u <= 1.0 + 1e-6 && u >= 0.0 - 1e-6) {
       crossingPoint.set(particle.pos.x + t*(particle.temp_pos.x - particle.pos.x), particle.pos.y + t*(particle.temp_pos.y - particle.pos.y));
       return PVector.sub(crossingPoint, P1).mag();
     } else { 
@@ -128,7 +131,7 @@ class Boundary { //<>//
     startPoint.y = newStartPointy + center.y;
     endPoint.x = newEndPointx + center.x;
     endPoint.y = newEndPointy + center.y;
-    
+
     // update normal vector
     normal = new PVector(startPoint.y - endPoint.y, endPoint.x - startPoint.x);
     normal.div(normal.mag());
