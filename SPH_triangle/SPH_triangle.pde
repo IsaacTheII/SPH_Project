@@ -10,9 +10,9 @@ boolean dim = false;
 float courant = 0.05;
 int size = 1000;
 float v_ini = 5;
-int btype = 0;
+int btype = 1;
 float frame_dt = 0.;
-float dt_thresh = 0.0006;
+float dt_thresh = 0.0015;
 int total_framecount = 0;
 
 

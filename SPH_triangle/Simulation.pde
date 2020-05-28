@@ -82,14 +82,24 @@ class Simulation { //<>//
   }
 
   void createBoundaries() {
-
     // base combined with two line segment angled at 45 degrees each
     boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
     boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
     //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
     //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
-    boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.2, 0.5)));
-    boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.3, 0.4)));
+    if (btype == 0) {
+      boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.2, 0.5)));
+      boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.3, 0.4)));
+    } else if (btype == 1) {
+      boundaries.add(new Boundary(new PVector(0.3, 0.45), new PVector(0.2, 0.5)));
+      boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.3, 0.55)));
+    } else if (btype == 2) {
+      boundaries.add(new Boundary(new PVector(0.35, 0.48), new PVector(0.2, 0.5)));
+      boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.35, 0.52)));
+    } else if (btype == 3) {
+      boundaries.add(new Boundary(new PVector(0.25, 0.45), new PVector(0.41, 0.505)));
+      boundaries.add(new Boundary(new PVector(0.41, 0.495), new PVector(0.25, 0.55)));
+    }
     //boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.3, 0.6)));
     //boundaries.add(new Boundary(new PVector(0.3, 0.4), new PVector(0.2, 0.5)));
   }
@@ -448,7 +458,8 @@ class Simulation { //<>//
   }
 
   void show_particles() {
-    root.show(size);
+    //root.show(size);
+    stroke(0, 0, 1);
     for (Boundary b : boundaries) {
       b.drawBoundary(size);
     }
