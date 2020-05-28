@@ -45,7 +45,7 @@ class Simulation { //<>//
     particles = new ArrayList<Particle>();
     rlow = getRlow();
     rhigh = getRhigh();
-    root = new Node(0, 10, rlow, rhigh, dim); // hardcoded 10 particles for multi body
+    root = new Node(0, 10, rlow, rhigh, dim); // hardcoded 20 particles for multi body
     read_data();
     createBoundaries();
   }
@@ -91,21 +91,28 @@ class Simulation { //<>//
       boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.2, 0.6)));
       boundaries.add(new Boundary(new PVector(0.1, 0.7), new PVector(0.2, 0.6)));
 
-      boundaries.add(new Boundary(new PVector(0.3, 0.7), new PVector(0.1, 0.7)));
-      boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.3, 0.7)));
-      boundaries.add(new Boundary(new PVector(0.2, 0.6), new PVector(0.3, 0.6)));
-      boundaries.add(new Boundary(new PVector(0.2, 0.6), new PVector(0.1, 0.7)));
-
       // rectangle
       boundaries.add(new Boundary(new PVector(0.4, 0.5), new PVector(0.4, 0.35)));
       boundaries.add(new Boundary(new PVector(0.4, 0.35), new PVector(0.55, 0.35)));
       boundaries.add(new Boundary(new PVector(0.55, 0.35), new PVector(0.55, 0.5)));
       boundaries.add(new Boundary(new PVector(0.55, 0.5), new PVector(0.4, 0.5)));
 
-      boundaries.add(new Boundary(new PVector(0.4, 0.35), new PVector(0.4, 0.5)));
-      boundaries.add(new Boundary(new PVector(0.55, 0.35), new PVector(0.4, 0.35)));
-      boundaries.add(new Boundary(new PVector(0.55, 0.5), new PVector(0.55, 0.35)));
-      boundaries.add(new Boundary(new PVector(0.4, 0.5), new PVector(0.55, 0.5)));
+    } else if (btype == 1) {
+      // same as btype = 0 but with an additional line element
+      // trapez
+      boundaries.add(new Boundary(new PVector(0.1, 0.7), new PVector(0.3, 0.7)));
+      boundaries.add(new Boundary(new PVector(0.3, 0.7), new PVector(0.3, 0.6)));
+      boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.2, 0.6)));
+      boundaries.add(new Boundary(new PVector(0.1, 0.7), new PVector(0.2, 0.6)));
+
+      // rectangle
+      boundaries.add(new Boundary(new PVector(0.4, 0.5), new PVector(0.4, 0.35)));
+      boundaries.add(new Boundary(new PVector(0.4, 0.35), new PVector(0.55, 0.35)));
+      boundaries.add(new Boundary(new PVector(0.55, 0.35), new PVector(0.55, 0.5)));
+      boundaries.add(new Boundary(new PVector(0.55, 0.5), new PVector(0.4, 0.5)));
+      
+      // line
+      boundaries.add(new Boundary(new PVector(0.4, 0.7), new PVector(0.6, 0.58)));
     }
   }
 
