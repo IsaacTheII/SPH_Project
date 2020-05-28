@@ -290,7 +290,7 @@ class Particle {
     if (!isReflectedParticle) {
       float col = map(rho, 0, max_val, 0, 1);
       stroke(col, 1, 1);
-      strokeWeight(map(pow(rho, 1), 0, pow(max_val, 1), 20, 5)); // inverted density mapping
+      strokeWeight(map(pow(rho, 1), 0, pow(max_val, 1), 5, 1)); // inverted density mapping
 
       float x = map(pos.x, 0, 1, -size/2, size/2);
       float y = map(pos.y, 0, 1, -size/2, size/2);
