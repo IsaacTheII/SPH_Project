@@ -246,7 +246,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
       PVector p7 = new PVector(0.325, 0.47);
       PVector p8 = new PVector(0.375, 0.46);
       PVector p9 = new PVector(0.45, 0.46);
-      PVector p10 = new PVector(0.55, 0.48);
+      PVector p10 = new PVector(0.55, 0.49);
       points.add(p1);
       points.add(p2);
       points.add(p3);
@@ -257,21 +257,22 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
       points.add(p8);
       points.add(p9);
       points.add(p10);
-      float factor = 0.7;
+      float factor = 1.2;
       PVector center = new PVector(0.5, 0.5);
+      PVector shift = new PVector(0.4, 0.5);
       for (PVector p : points) {
         PVector shifted = PVector.sub(p, center);
-        boundaries.add(new Boundary(p1, p2));
-        p.set(PVector.add(PVector.mult(shifted, factor), center));
+        
+        p.set(PVector.add(PVector.mult(shifted, factor), shift));
       }
-      
-      for (int i = 0; i < 10; i++){
+
+      for (int i = 0; i < 10; i++) {
         boundaries.add(new Boundary(points.get(i), points.get((i+1)%10)));
       }
 
       boundaries.add(new Boundary(new PVector(-0.1, 0.0), new PVector(1.1, 0.0)));
       boundaries.add(new Boundary(new PVector(-0.1, 1.0), new PVector(1.1, 1.0)));
-      boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(0.0, 1.0)));
+      //boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(0.0, 1.0)));
     }
   }
 
@@ -551,10 +552,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     if (dim) {
       p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
     } else if (!dim && btype >= 5) {
-      if (p.pos.x > 1.0 || p.pos.x < 0.0) {
-        garbage_colleciton.add(p);
-      }
-      if (p.pos.y > 1.0 || p.pos.y < 0.0) {
+      if (p.pos.x >= 1.0 || p.pos.x <= 0.0 || p.pos.y >= 1.0 || p.pos.y <= 0.0) {
         garbage_colleciton.add(p);
       }
     } else {
@@ -636,14 +634,13 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     particles.removeAll(garbage_colleciton);
     garbage_colleciton.clear();
     if (btype == 5 && max_val <= 20) {
-      //if (btype == 5 && particles.size() < pow(iter, 2)) {
       float x = random(0.15, 0.2);
       float y = random(0.4, 0.6);
       particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 50));
       //ignite();
     } else if (btype >= 6) {
-      while (particles.size() < pow(iter, 2)) {
-        float x = 0.001;
+      while (particles.size() < num_particles) {
+        float x = 0.0;
         float y = random(1);
         particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
         //ignite();
@@ -651,7 +648,6 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     }
     this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(1, 1), dim);
     drift1();
-    ignite();
     calc_forces();
     kick();
     drift2();
