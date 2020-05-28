@@ -11,8 +11,8 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   Node root;
   ArrayList<Particle> particles;
   int size;
-  float t_global = 0;
-  float dt = 0;
+  float t_global = 0.;
+  float dt = 0.;
   float max_val = 10;
   float v_ini;
   float rotationSpeed = 0.002;
@@ -21,8 +21,11 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   PVector rlow;
   PVector rhigh;
   ArrayList<Particle> garbage_colleciton = new ArrayList<Particle>();
+  int w;
+  int h;
+  float scale = 3.5;
 
-  Simulation(int leaf_size_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_) {
+  Simulation(int leaf_size_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_, int w_, int h_) {
     leaf_size = leaf_size_;
     iter = iter_;
     e_ini = e_ini_;
@@ -33,247 +36,68 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     v_ini = v_ini_;
     btype = btype_;
     boundaries = new ArrayList<Boundary>();
+    w = w_;
+    h = h_;
+    gamma = 1.1;
+    sigma = 40./(7 * PI);
+    num_particles = int(pow(iter, 2));
 
-    if (dim) {
-      gamma = 5./3.; // gamma = (f+2)/f , f = number of degrees of freedom
-      sigma = 8./PI;
-      num_particles = int(pow(iter, 3));
-    } else {
-      gamma = 2.;
-      sigma = 40./(7 * PI);
-      num_particles = int(pow(iter, 2));
-    }
     particles = new ArrayList<Particle>();
-    rlow = getRlow();
-    rhigh = getRhigh();
+    rlow = new PVector(0, 0);
+    rhigh = new PVector(w, h);
+    ;
     root = new Node(0, 10, rlow, rhigh, dim); // hardcoded 10 particles to start with btype = 5
-    read_data(param_);
+    read_data();
     createBoundaries();
   }
 
-  PVector getRlow() {
-    if (dim) {
-      return new PVector(0, 0, 0);
-    } else {
-      return new PVector(0, 0);
-    }
-  }
-
-  PVector getRhigh() {
-    if (dim) {
-      return new PVector(1, 1, 1);
-    } else {
-      return new PVector(1, 1);
-    }
-  }
 
 
-  void read_data(int param) {
+  void read_data() {
     println("Creating ", num_particles, " particles");
 
     randomSeed(0);
-    if (dim) {
-      if (param == 1) {
-        for (int i = 0; i < num_particles-1; i++) {
-          float x = random(1);
-          float y = random(1);
-          float z = random(1);
-          Particle particle = new Particle(new PVector(x, y, z), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, 1.);
-          particles.add(particle);
-        }
-        Particle particle = new Particle(new PVector(0.5, 0.5, 0.5), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, e_ini);
-        particles.add(particle);
-      } else {
-        float spacing = 1. / iter;
-        for (int x = 0; x < iter; x++) {
-          for (int y = 0; y < iter; y++) {
-            for (int z = 0; z < iter; z++) {
-              if ((x == floor(iter/2)) && (y == floor(iter/2)) && (z == floor(iter/2))) {
-                Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, e_ini);
-                particles.add(particle);
-              } else {
-                PVector pos = new PVector(spacing * x + 0.5 * spacing + randomGaussian() / 100, spacing * y + 0.5 * spacing + randomGaussian() / 100, spacing * z + 0.5 * spacing + randomGaussian() / 100);
-                Particle particle = new Particle(pos, new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, 1.);
-                particles.add(particle);
-              }
-            }
-          }
-        }
-      }
-    } else {
-      if (param == 1 && btype < 5) {
-        for (int i = 0; i < num_particles-1; i++) {
-          float x = random(1);
-          float y = random(1);
-          Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1);
-          particles.add(particle);
-        }
-        Particle particle = new Particle(new PVector(0.5, 0.5), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, e_ini);
-        particles.add(particle);
-      } else if (param == 2 && btype < 5) {
-        for (int i = 0; i < num_particles-1; i++) {
-          float x = random(1);
-          float y = random(1);
-          Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0), new PVector(0.0, 0.0), 1./num_particles, 1);
-          particles.add(particle);
-        }
-        Particle particle = new Particle(new PVector(0.01, 0.5), new PVector(v_ini, -v_ini), new PVector(0.0, 0.0), 1./num_particles, 1);
-        particles.add(particle);
-      } else if (param == 0 && btype < 5) {
-        float spacing = 1. / iter;
-        for (int x = 0; x < iter; x++) {
-          for (int y = 0; y < iter; y++) {
-            if ((x == floor(iter/3)) && (y == floor(iter/2))) {
-              Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, e_ini);
-              particles.add(particle);
-            } else {
-              PVector pos = new PVector(spacing * x + 0.5 * spacing + randomGaussian() / 1000, spacing * y + 0.5 * spacing + randomGaussian() / 1000);
-              Particle particle = new Particle(pos, new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1.);
-              particles.add(particle);
-            }
-          }
-        }
-      } else if (btype == 5) {
-        println("Generating just a few particles.");
-        for (int i = 0; i < 10; i++) {
-          float x = random(1);
-          float y = random(1);
-          Particle particle = new Particle(new PVector(x, y), new PVector(0.0, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1);
-          particles.add(particle);
-        }
-      } else if (btype >= 6) {
-        println("Generating wing particles.");
-        for (int i = 0; i < pow(iter, 2); i++) {
-          float x = random(0.1);
-          float y = random(1);
-          Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1);
-          particles.add(particle);
-        }
-      }
-    }
+    for (int i = 0; i <= nn + 1; i++) particles.add(new Particle(new PVector(.34 + random(0.05), 6/scale - random(.9)/scale), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
     println("Done creating particles!\n");
   }
 
   void createBoundaries() {
+    boundaries.add(new Boundary(new PVector(1, 1).div(scale), new PVector(12, 1).div(scale)));
+    boundaries.add(new Boundary(new PVector(13, 1).div(scale), new PVector(13, 6).div(scale)));
+    boundaries.add(new Boundary(new PVector(13, 6).div(scale), new PVector(1, 6).div(scale)));
+    boundaries.add(new Boundary(new PVector(1, 6).div(scale), new PVector(1, 1).div(scale)));
 
-    if (btype == 0) { 
-      // normal upper and lower boundaries (base)
-      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
-      boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
-      //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
-      //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
-    } else if (btype == 1) {
-      // base combined with a line segment angled at 45 degrees
-      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
-      boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
-      //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
-      //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
-      //boundaries.add(new Boundary(new PVector(0.4, 0.4), new PVector(0.6, 0.6)));
-      boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.4)));
-    } else if (btype == 2) {
-      // base combined with two line segment angled at 45 degrees each
-      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
-      boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
-      //boundaries.add(new Boundary(new PVector(-1.0, 0.0), new PVector(2.0, 0.0)));
-      //boundaries.add(new Boundary(new PVector(2.0, 1.0), new PVector(-1.0, 1.0)));
-      boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.2, 0.5)));
-      boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.3, 0.4)));
-      //boundaries.add(new Boundary(new PVector(0.2, 0.5), new PVector(0.3, 0.6)));
-      //boundaries.add(new Boundary(new PVector(0.3, 0.4), new PVector(0.2, 0.5)));
-    } else if (btype == 3) {
-      // base combined with a straight line element
-      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
-      boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
-      boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.3, 0.4)));
-    } else if (btype == 4) {
-      // base combined with simplified "rocket thruster" with iterative particle placement
-      boundaries.add(new Boundary(new PVector(2.0, 0.0), new PVector(-1.0, 0.0)));
-      boundaries.add(new Boundary(new PVector(-1.0, 1.0), new PVector(2.0, 1.0)));
-      boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(0.4, 0.45)));
-      boundaries.add(new Boundary(new PVector(0.0, 1.0), new PVector(0.4, 0.55)));
-      boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.6, 0.4)));
-      boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.6, 0.6)));
+    boundaries.add(new Boundary(new PVector(1, 5).div(scale), new PVector(2, 5).div(scale)));
+    boundaries.add(new Boundary(new PVector(1, 3).div(scale), new PVector(2, 3).div(scale)));
+    boundaries.add(new Boundary(new PVector(2, 3).div(scale), new PVector(2, 4).div(scale)));
+    boundaries.add(new Boundary(new PVector(2, 2).div(scale), new PVector(4, 2).div(scale)));
+    boundaries.add(new Boundary(new PVector(3, 2).div(scale), new PVector(3, 4).div(scale)));
+    boundaries.add(new Boundary(new PVector(3, 4).div(scale), new PVector(5, 4).div(scale)));
+    boundaries.add(new Boundary(new PVector(4, 2).div(scale), new PVector(4, 3).div(scale)));
+    boundaries.add(new Boundary(new PVector(4, 4).div(scale), new PVector(4, 5).div(scale)));
+    boundaries.add(new Boundary(new PVector(4, 5).div(scale), new PVector(6, 5).div(scale)));
+    boundaries.add(new Boundary(new PVector(5, 5).div(scale), new PVector(5, 6).div(scale)));
+    boundaries.add(new Boundary(new PVector(5, 4).div(scale), new PVector(5, 3).div(scale)));
+    boundaries.add(new Boundary(new PVector(5, 3).div(scale), new PVector(6, 3).div(scale)));
+    boundaries.add(new Boundary(new PVector(6, 3).div(scale), new PVector(6, 2).div(scale)));
+    boundaries.add(new Boundary(new PVector(6, 2).div(scale), new PVector(7, 2).div(scale)));
+    boundaries.add(new Boundary(new PVector(5, 1).div(scale), new PVector(5, 2).div(scale)));
+    boundaries.add(new Boundary(new PVector(8, 1).div(scale), new PVector(8, 3).div(scale)));
 
-      // Reversely orientated boundaries. Not necessary?
-      boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.0, 0.0)));
-      boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.0, 1.0)));
-      boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.45)));
-      boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55)));
-    } else if (btype == 5) {
-      // same as btype = 4
-      //combustion champer
-      boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.4, 0.45)));
-      boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.4, 0.55)));
-      boundaries.add(new Boundary(new PVector(0.09, 0.3), new PVector(0.31, 0.3)));
-      boundaries.add(new Boundary(new PVector(0.09, 0.7), new PVector(0.31, 0.7)));
-      boundaries.add(new Boundary(new PVector(0.1, 0.3), new PVector(0.1, 0.7)));
-      //boundaries.add(new Boundary(new PVector(0.1, 0.45), new PVector(0.1, 0.6)));
-      //boundaries.add(new Boundary(new PVector(0.1, 0.65), new PVector(0.1, 0.7)));
+    boundaries.add(new Boundary(new PVector(7, 3).div(scale), new PVector(7, 4).div(scale)));
+    boundaries.add(new Boundary(new PVector(7, 4).div(scale), new PVector(8, 4).div(scale)));
+    boundaries.add(new Boundary(new PVector(8, 4).div(scale), new PVector(8, 5).div(scale)));
+    boundaries.add(new Boundary(new PVector(5, 5).div(scale), new PVector(5, 6).div(scale)));
+    boundaries.add(new Boundary(new PVector(8, 5).div(scale), new PVector(12, 5).div(scale)));
 
-      //methan oxygen pipes
-      //boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.6, 0.4)));
-      //boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.6, 0.6)));
-
-      //nozzle
-
-
-
-
-
-      // Reversely orientated boundaries. Not necessary?
-      //boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.0, 0.0)));
-      //boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.0, 1.0)));
-      boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.45)));
-      boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55)));
-    } else if (btype == 6) {
-      //Wing
-      boundaries.add(new Boundary(new PVector(0.32, 0.52), new PVector(0.375, 0.5)));
-      boundaries.add(new Boundary(new PVector(0.32, 0.52), new PVector(0.315, 0.55)));
-      boundaries.add(new Boundary(new PVector(0.375, 0.5), new PVector(0.425, 0.5)));
-      boundaries.add(new Boundary(new PVector(0.425, 0.5), new PVector(0.7, 0.6)));
-      boundaries.add(new Boundary(new PVector(0.315, 0.55), new PVector(0.7, 0.6)));
-      boundaries.add(new Boundary(new PVector(-0.1, 0.0), new PVector(1.1, 0.0)));
-      boundaries.add(new Boundary(new PVector(-0.1, 1.0), new PVector(1.1, 1.0)));
-    } else if (btype == 7) {
-      ArrayList<PVector> points = new ArrayList<PVector>();
-      //Wing
-      PVector p1 = new PVector(0.76, 0.6);
-      PVector p2 = new PVector(0.4, 0.515);
-      PVector p3 = new PVector(0.32, 0.515);
-      PVector p4 = new PVector(0.3, 0.5125);
-      PVector p5 = new PVector(0.285, 0.5);
-      PVector p6 = new PVector(0.2963, 0.4875);
-      PVector p7 = new PVector(0.325, 0.47);
-      PVector p8 = new PVector(0.375, 0.46);
-      PVector p9 = new PVector(0.45, 0.46);
-      PVector p10 = new PVector(0.55, 0.49);
-      points.add(p1);
-      points.add(p2);
-      points.add(p3);
-      points.add(p4);
-      points.add(p5);
-      points.add(p6);
-      points.add(p7);
-      points.add(p8);
-      points.add(p9);
-      points.add(p10);
-      float factor = 1.2;
-      PVector center = new PVector(0.5, 0.5);
-      PVector shift = new PVector(0.4, 0.5);
-      for (PVector p : points) {
-        PVector shifted = PVector.sub(p, center);
-        
-        p.set(PVector.add(PVector.mult(shifted, factor), shift));
-      }
-
-      for (int i = 0; i < 10; i++) {
-        boundaries.add(new Boundary(points.get(i), points.get((i+1)%10)));
-      }
-
-      boundaries.add(new Boundary(new PVector(-0.1, 0.0), new PVector(1.1, 0.0)));
-      boundaries.add(new Boundary(new PVector(-0.1, 1.0), new PVector(1.1, 1.0)));
-      //boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(0.0, 1.0)));
-    }
+    boundaries.add(new Boundary(new PVector(9, 3).div(scale), new PVector(9, 4).div(scale)));
+    boundaries.add(new Boundary(new PVector(6, 5).div(scale), new PVector(6, 4).div(scale)));
+    boundaries.add(new Boundary(new PVector(7, 5).div(scale), new PVector(7, 6).div(scale)));
+    boundaries.add(new Boundary(new PVector(12, 5).div(scale), new PVector(8, 5).div(scale)));
+    boundaries.add(new Boundary(new PVector(10, 4).div(scale), new PVector(13, 4).div(scale)));
+    boundaries.add(new Boundary(new PVector(7, 3).div(scale), new PVector(12, 3).div(scale)));
+    boundaries.add(new Boundary(new PVector(12, 3).div(scale), new PVector(12, 2).div(scale)));
+    boundaries.add(new Boundary(new PVector(9, 2).div(scale), new PVector(12, 2).div(scale)));
   }
 
   int getNexdim(int dimension) {
@@ -552,7 +376,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     if (dim) {
       p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
     } else if (!dim && btype >= 5) {
-      if (p.pos.x >= 1.0 || p.pos.x <= 0.0 || p.pos.y >= 1.0 || p.pos.y <= 0.0) {
+      if (p.pos.x >= w || p.pos.x <= 0.0 || p.pos.y >= h || p.pos.y <= 0.0) {
         garbage_colleciton.add(p);
       }
     } else {
@@ -633,20 +457,13 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   void update() {
     particles.removeAll(garbage_colleciton);
     garbage_colleciton.clear();
-    if (btype == 5 && max_val <= 20) {
-      float x = random(0.15, 0.2);
-      float y = random(0.4, 0.6);
-      particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 50));
-      //ignite();
-    } else if (btype >= 6) {
-      while (particles.size() < num_particles) {
-        float x = 0.0;
-        float y = random(1);
-        particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
-        //ignite();
-      }
+
+    if (max_val <= 100) {
+      println(max_val);
+      for (int i = 0; i <= 2; i++) particles.add(new Particle(new PVector(.34 + random(0.05), 6/scale - random(.9)/scale), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
     }
-    this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(1, 1), dim);
+    
+    this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(w, h), dim);
     drift1();
     calc_forces();
     kick();
@@ -654,18 +471,13 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   }
 
   void show_particles() {
-    root.show(size);
+    //root.show(size, w);
+    stroke(0, 0, 1);
     for (Boundary b : boundaries) {
-      b.drawBoundary(size);
-    }
-    if (dim) {
-      for (Particle p : particles) {
-        p.show_3d(size, max_val);
-      }
-    } else {  
-      for (Particle p : particles) {
-        p.show_2d(size, max_val);
-      }
+      b.drawBoundary(size, w, h);
+    } 
+    for (Particle p : particles) {
+      p.show_2d(size, max_val, w, h);
     }
   }
 }

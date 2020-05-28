@@ -6,3 +6,5 @@ SPH_main/movie/
 *.tmp
 
 */movie/
+
+*.autosave

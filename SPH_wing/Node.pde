@@ -43,7 +43,7 @@ class Node {
     return dist.mag() - rmax;
   }
 
-  void show(int size_) {
+  void show(int size_, int w_) {
     stroke(0, 0, 1);
     strokeWeight(1);
     noFill();
@@ -61,8 +61,8 @@ class Node {
       box(w, h, d);
       popMatrix();
       if (!leaf) {
-        right.show(size_);
-        left.show(size_);
+        right.show(size_, w_);
+        left.show(size_, w_);
       }
     } else {
 
@@ -70,18 +70,17 @@ class Node {
 
         println(rlow, rhigh);
         exit();
-        
       }
 
-      float xl = map(rlow.x, 0, 1, -size_/2, size_/2);
+      float xl = map(rlow.x, 0, w_, -size_ * w_/2, size_ * w_/2);
       float yl = map(rlow.y, 0, 1, -size_/2, size_/2);
-      float xh = map(rhigh.x, 0, 1, -size_/2, size_/2);   
+      float xh = map(rhigh.x, 0, w, -size_ * w_/2, size_ * w_/2);   
       float yh = map(rhigh.y, 0, 1, -size_/2, size_/2);
       rectMode(CORNERS);
       rect(xl, yl, xh, yh);
       if (!leaf) {
-        right.show(size_);
-        left.show(size_);
+        right.show(size_, w_);
+        left.show(size_, w_);
       }
     }
   }

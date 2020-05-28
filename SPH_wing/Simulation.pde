@@ -11,8 +11,8 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   Node root;
   ArrayList<Particle> particles;
   int size;
-  float t_global = 0;
-  float dt = 0;
+  float t_global = 0.;
+  float dt = 0.;
   float max_val = 10;
   float v_ini;
   float rotationSpeed = 0.002;
@@ -21,8 +21,9 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   PVector rlow;
   PVector rhigh;
   ArrayList<Particle> garbage_colleciton = new ArrayList<Particle>();
+  int w;
 
-  Simulation(int leaf_size_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_) {
+  Simulation(int leaf_size_, int param_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_, int w_) {
     leaf_size = leaf_size_;
     iter = iter_;
     e_ini = e_ini_;
@@ -33,6 +34,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     v_ini = v_ini_;
     btype = btype_;
     boundaries = new ArrayList<Boundary>();
+    w = w_;
 
     if (dim) {
       gamma = 5./3.; // gamma = (f+2)/f , f = number of degrees of freedom
@@ -45,96 +47,21 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     }
     particles = new ArrayList<Particle>();
     rlow = new PVector(0, 0);
-    rhigh = new PVector(2, 1);
+    rhigh = new PVector(w, 1);
+    ;
     root = new Node(0, 10, rlow, rhigh, dim); // hardcoded 10 particles to start with btype = 5
     read_data(param_);
     createBoundaries();
   }
 
 
+
   void read_data(int param) {
     println("Creating ", num_particles, " particles");
-
     randomSeed(0);
-    if (dim) {
-      if (param == 1) {
-        for (int i = 0; i < num_particles-1; i++) {
-          float x = random(1);
-          float y = random(1);
-          float z = random(1);
-          Particle particle = new Particle(new PVector(x, y, z), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, 1.);
-          particles.add(particle);
-        }
-        Particle particle = new Particle(new PVector(0.5, 0.5, 0.5), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, e_ini);
-        particles.add(particle);
-      } else {
-        float spacing = 1. / iter;
-        for (int x = 0; x < iter; x++) {
-          for (int y = 0; y < iter; y++) {
-            for (int z = 0; z < iter; z++) {
-              if ((x == floor(iter/2)) && (y == floor(iter/2)) && (z == floor(iter/2))) {
-                Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing, spacing * z + 0.5 * spacing), new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, e_ini);
-                particles.add(particle);
-              } else {
-                PVector pos = new PVector(spacing * x + 0.5 * spacing + randomGaussian() / 100, spacing * y + 0.5 * spacing + randomGaussian() / 100, spacing * z + 0.5 * spacing + randomGaussian() / 100);
-                Particle particle = new Particle(pos, new PVector(0, 0, 0), new PVector(0, 0, 0), 1./num_particles, 1.);
-                particles.add(particle);
-              }
-            }
-          }
-        }
-      }
-    } else {
-      if (param == 1 && btype < 5) {
-        for (int i = 0; i < num_particles-1; i++) {
-          float x = random(1);
-          float y = random(1);
-          Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1);
-          particles.add(particle);
-        }
-        Particle particle = new Particle(new PVector(0.5, 0.5), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, e_ini);
-        particles.add(particle);
-      } else if (param == 2 && btype < 5) {
-        for (int i = 0; i < num_particles-1; i++) {
-          float x = random(1);
-          float y = random(1);
-          Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0), new PVector(0.0, 0.0), 1./num_particles, 1);
-          particles.add(particle);
-        }
-        Particle particle = new Particle(new PVector(0.01, 0.5), new PVector(v_ini, -v_ini), new PVector(0.0, 0.0), 1./num_particles, 1);
-        particles.add(particle);
-      } else if (param == 0 && btype < 5) {
-        float spacing = 1. / iter;
-        for (int x = 0; x < iter; x++) {
-          for (int y = 0; y < iter; y++) {
-            if ((x == floor(iter/3)) && (y == floor(iter/2))) {
-              Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, e_ini);
-              particles.add(particle);
-            } else {
-              PVector pos = new PVector(spacing * x + 0.5 * spacing + randomGaussian() / 1000, spacing * y + 0.5 * spacing + randomGaussian() / 1000);
-              Particle particle = new Particle(pos, new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1.);
-              particles.add(particle);
-            }
-          }
-        }
-      } else if (btype == 5) {
-        println("Generating just a few particles.");
-        for (int i = 0; i < 10; i++) {
-          float x = random(1);
-          float y = random(1);
-          Particle particle = new Particle(new PVector(x, y), new PVector(0.0, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1);
-          particles.add(particle);
-        }
-      } else if (btype >= 6) {
-        println("Generating wing particles.");
-        for (int i = 0; i < pow(iter, 2); i++) {
-          float x = random(0.1);
-          float y = random(1);
-          Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1);
-          particles.add(particle);
-        }
-      }
-    }
+    println("Generating wing particles.");
+    for (int i = 0; i <= 100; i++) particles.add(new Particle(new PVector(0.01, random(1)), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
+
     println("Done creating particles!\n");
   }
 
@@ -243,7 +170,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
       points.add(p10);
       float factor = 1.2;
       PVector center = new PVector(0.5, 0.5);
-      PVector shift = new PVector(0.9, 0.5);
+      PVector shift = new PVector(0.8, 0.5);
       for (PVector p : points) {
         PVector shifted = PVector.sub(p, center);
 
@@ -254,9 +181,9 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
         boundaries.add(new Boundary(points.get(i), points.get((i+1)%10)));
       }
 
-      boundaries.add(new Boundary(new PVector(-0.1, 0.0), new PVector(2.1, 0.0)));
-      boundaries.add(new Boundary(new PVector(-0.1, 1.0), new PVector(2.1, 1.0)));
-      //boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(0.0, 1.0)));
+      boundaries.add(new Boundary(new PVector(-0.1, 0.0), new PVector(w + 0.1, 0.0)));
+      boundaries.add(new Boundary(new PVector(-0.1, 1.0), new PVector(w + 0.1, 1.0)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(0.0, 1.0)));
     }
   }
 
@@ -442,21 +369,39 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
 
 
   void nn_density(Node root) {
-    for (Particle p : particles) {
-      p.nn_search_2d(root, nn, particles, boundaries);
+    if (dim) {
+      for (Particle p : particles) {
+        p.nn_search_3d(root, nn, particles);
+      }
+    } else {
+      for (Particle p : particles) {
+        p.nn_search_2d(root, nn, particles, boundaries);
+      }
     }
-    max_val = 0;
-    for (Particle p : particles) {
-      p.rho = 0;
-      for (ParticleTuple tup : p.n_closest) {
-        if (!tup.p.isReflectedParticle) {
-          p.rho += tup.p.m * p.monoghan_kernel_2d(tup.dist, sigma);
+    if (dim) {
+      for (Particle p : particles) {
+        p.rho = 0;
+        for (ParticleTuple tup : p.n_closest) {
+          p.rho += tup.p.m * p.monoghan_kernel_3d(tup.dist, sigma);
+        }
+        if (p.rho > max_val) {
+          max_val = p.rho;
         }
       }
-      if (p.vel.mag() > max_val) {
-        max_val = p.vel.mag();
+    } else {
+      max_val = 0;
+      for (Particle p : particles) {
+        p.rho = 0;
+        for (ParticleTuple tup : p.n_closest) {
+          if (!tup.p.isReflectedParticle) {
+            p.rho += tup.p.m * p.monoghan_kernel_2d(tup.dist, sigma);
+          }
+        }
+        if (p.rho > max_val) {
+          max_val = p.rho;
+        }
+        // add small positive number to rho to avoid zero density
       }
-      // add small positive number to rho to avoid zero density
     }
   }
 
@@ -518,7 +463,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     if (dim) {
       p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
     } else if (!dim && btype >= 5) {
-      if (p.pos.x >= 2.0 || p.pos.x <= 0.0 || p.pos.y >= 1.0 || p.pos.y <= 0.0) {
+      if (p.pos.x >= w + 0.0 || p.pos.x <= 0.0 || p.pos.y >= 1.0 || p.pos.y <= 0.0) {
         garbage_colleciton.add(p);
       }
     } else {
@@ -599,23 +544,10 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   void update() {
     particles.removeAll(garbage_colleciton);
     garbage_colleciton.clear();
-    if (btype == 5 && max_val <= 20) {
-      float x = random(0.15, 0.2);
-      float y = random(0.4, 0.6);
-      particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 50));
-      //ignite();
-    } else if (btype >= 6) {
-      if (frameCount % 1 == 0) {
-        float x = 0.02;
-        float y = random(1);
-        particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
-        x = 0.02;
-        y = random(1);
-        particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
-        //ignite();
-      }
-    }
-    this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(2, 1), dim);
+
+    for (int i = 0; i <= 4; i++) particles.add(new Particle(new PVector(0.01, random(1)), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
+
+    this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(w, 1), dim);
     drift1();
     calc_forces();
     kick();
@@ -623,18 +555,13 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   }
 
   void show_particles() {
-    root.show(size);
+    //root.show(size, w);
+    stroke(0, 0, 1);
     for (Boundary b : boundaries) {
-      b.drawBoundary(size);
-    }
-    if (dim) {
-      for (Particle p : particles) {
-        p.show_3d(size, max_val);
-      }
-    } else {  
-      for (Particle p : particles) {
-        p.show_2d(size, max_val);
-      }
+      b.drawBoundary(size, w);
+    }  
+    for (Particle p : particles) {
+      p.show_2d(size, max_val, w);
     }
   }
 }
