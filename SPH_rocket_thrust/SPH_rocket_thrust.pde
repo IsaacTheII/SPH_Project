@@ -3,16 +3,15 @@ import peasy.*;
 float a = 0.;
 int leaf_size = 8;
 int speed_up = 1;
-int iter = 25;
+int iter = 35;
 float e_ini = 1;
 int nn = 8;
 boolean dim = false;
 float courant = 0.05;
 int size = 1000;
 float v_ini = 5;
-int btype = 5;
 float frame_dt = 0.;
-float dt_thresh = 0.0003;
+float dt_thresh = 0.0006;
 int total_framecount = 0;
 
 Simulation sim;
@@ -20,7 +19,7 @@ Simulation sim;
 PeasyCam cam;
 
 void setup() {
-  size(1000, 1000, P3D);
+  size(512, 512, P3D);
   colorMode(HSB, 1);
   smooth();
 
@@ -59,5 +58,5 @@ void draw() {
 
   sim.show_particles();
   frame_dt = frame_dt%dt_thresh;
-  //saveFrame("movie/SPH_#####.jpg"); //<>//
+  saveFrame("movie/SPH_#####.jpg"); //<>//
 }

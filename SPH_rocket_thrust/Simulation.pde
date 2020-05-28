@@ -43,7 +43,7 @@ class Simulation { //<>//
     particles = new ArrayList<Particle>();
     rlow = getRlow();
     rhigh = getRhigh();
-    root = new Node(0, 10, rlow, rhigh, dim); // hardcoded 10 particles to start with btype = 5
+    root = new Node(0, 10, rlow, rhigh, dim); 
     read_data();
     createBoundaries();
   }
@@ -376,13 +376,11 @@ class Simulation { //<>//
     }
   }
 
-  void ignite() {
-    if (btype == 5) {      
-      for (Particle p : particles) {
-        if ( p.pos.x >= .38 && p.pos.x <= .42) {
-          if ( p.pos.y >= 0.48 && p.pos.y <= 0.52) {
-            p.e *= 1.01;
-          }
+  void ignite() {    
+    for (Particle p : particles) {
+      if ( p.pos.x >= .38 && p.pos.x <= .42) {
+        if ( p.pos.y >= 0.48 && p.pos.y <= 0.52) {
+          p.e *= 1.01;
         }
       }
     }
@@ -444,7 +442,8 @@ class Simulation { //<>//
   }
 
   void show_particles() {
-    root.show(size);
+    //root.show(size);
+    stroke(0,0,1);
     for (Boundary b : boundaries) {
       b.drawBoundary(size);
     }
