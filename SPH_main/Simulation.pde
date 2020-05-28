@@ -526,9 +526,9 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
 
   void ignite() {
     for (Particle p : particles) {
-      if ( p.pos.x > .38 && p.pos.x < .42) {
-        if ( p.pos.y > 0.48 && p.pos.y < 0.52) {
-          p.e = 1;
+      if ( p.pos.x >= .38 && p.pos.x <= .42) {
+        if ( p.pos.y >= 0.48 && p.pos.y <= 0.52) {
+          p.e *= 1.01;
         }
       }
     }
@@ -540,7 +540,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
       // Calculate the next position
       p.temp_pos = PVector.add(p.pos, PVector.mult(p.vel, dt * 0.5));
 
-      // Check if crossed a bounary
+      // Check if crossed a boundary
       for (Boundary b : boundaries) {
         b.checkBoundary(p);
       }
@@ -585,8 +585,8 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
       //ignite();
     }
     this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(1, 1), dim);
-
     drift1();
+    ignite();
     calc_forces();
     kick();
     drift2();

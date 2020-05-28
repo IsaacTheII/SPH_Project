@@ -4,7 +4,7 @@ float a = 0.;
 int leaf_size = 8;
 int speed_up = 1;
 int param = 0; // 2 = testing environment (low amount of particles), 1 = random, 0 = uniform
-int iter = 21;
+int iter = 15;
 float e_ini = 1;
 int nn = 8;
 boolean dim = false;
@@ -13,7 +13,7 @@ int size = 1000;
 float v_ini = 2;
 int btype = 5;
 float frame_dt = 0.;
-float dt_thresh = 0.001;
+float dt_thresh = 0.0002;
 int total_framecount = 0;
 
 
@@ -56,11 +56,11 @@ void draw() {
     if (total_framecount % 1000 == 0) sim.reset_e();
   }
   println(counter);
-  total_framecount++;
-  if (total_framecount % 100 == 0) sim.reset_e();
-  sim.update();
+  //total_framecount++;
+  //if (total_framecount % 100 == 0) sim.reset_e();
+  //sim.update();
 
   sim.show_particles();
   frame_dt = frame_dt%dt_thresh;
-  saveFrame("movie/SPH_#####.jpg"); //<>//
+  //saveFrame("movie/SPH_#####.jpg"); //<>//
 }
