@@ -3,17 +3,16 @@ import peasy.*;
 float a = 0.;
 int leaf_size = 8;
 int speed_up = 1;
-int param = 0; // 2 = testing environment (low amount of particles), 1 = random, 0 = uniform
-int iter = 25;
+int iter = 55;
 float e_ini = 1.;
-int nn = 8;
+int nn = 16;
 boolean dim = false;
 float courant = 0.05;
 int size = 1000;
 float v_ini = 5;
-int btype = 7;
+int btype = 0;
 float frame_dt = 0.;
-float dt_thresh = 0.0003;
+float dt_thresh = 0.0006;
 int total_framecount = 0;
 
 
@@ -22,14 +21,14 @@ Simulation sim;
 PeasyCam cam;
 
 void setup() {
-  size(1000, 1000, P3D);
+  size(512, 512, P3D);
   colorMode(HSB, 1);
   smooth();
 
   cam = new PeasyCam(this, width/2, height/2, 0, 1000);
 
 
-  sim = new Simulation(leaf_size, param, iter, e_ini, nn, dim, courant, size, v_ini, btype);
+  sim = new Simulation(leaf_size, iter, e_ini, nn, dim, courant, size, v_ini, btype);
   sim.calc_forces();
 }
 
@@ -55,7 +54,7 @@ void draw() {
     total_framecount++;
     if (total_framecount % 1000 == 0) sim.reset_e();
   }
-  println(counter);
+  //println(counter);
   //total_framecount++;
   //if (total_framecount % 100 == 0) sim.reset_e();
   //sim.update();
