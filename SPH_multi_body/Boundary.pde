@@ -110,12 +110,12 @@ class Boundary { //<>//
     return reflected;
   }
 
-  void drawBoundary(int size) {
+  void drawBoundary(int size, int w, int h) {
 
-    float x1 = map(startPoint.x, 0, 1, -size/2, size/2);
-    float y1 = map(startPoint.y, 0, 1, -size/2, size/2);
-    float x2 = map(endPoint.x, 0, 1, -size/2, size/2);
-    float y2 = map(endPoint.y, 0, 1, -size/2, size/2);
+    float x1 = map(startPoint.x, 0, w, -size*w/2, size*w/2);
+    float y1 = map(startPoint.y, 0, h, -size*h/2, size*h/2);
+    float x2 = map(endPoint.x, 0, w, -size*w/2, size*w/2);
+    float y2 = map(endPoint.y, 0, h, -size*h/2, size*h/2);
 
     // Draw boundaries
     strokeWeight(5);
