@@ -8,6 +8,7 @@ class Boundary { //<>//
   PVector center;
   float det;
   boolean isStationary = true;
+  float eps = 1e-6;
 
   Boundary(PVector startPoint_, PVector endPoint_) {
     startPoint = startPoint_;
@@ -33,7 +34,7 @@ class Boundary { //<>//
     float u_nominator =  (particle.pos.x - particle.temp_pos.x)*(particle.pos.y - startPoint.y) - (particle.pos.y - particle.temp_pos.y)*(particle.pos.x - startPoint.x);
     float u = -u_nominator/t_denominator;
 
-    if (t <= 1.0 + 1e-6 && t >= 0.0 - 1e-6 && u <= 1.0 + 1e-6 && u >= 0.0 - 1e-6) {
+    if (t <= 1.0 + eps && t >= 0.0 - eps && u <= 1.0 + eps && u >= 0.0 - eps) {
 
       crossingPoint.set(particle.pos.x + t*(particle.temp_pos.x - particle.pos.x), particle.pos.y + t*(particle.temp_pos.y - particle.pos.y));
       return true;
@@ -58,7 +59,7 @@ class Boundary { //<>//
     float u = -u_nominator/t_denominator;
 
 
-    if (t <= 1.0 + 1e-6 && t >= 0.0 - 1e-6 && u <= 1.0 + 1e-6 && u >= 0.0 - 1e-6) {
+    if (t <= 1.0 + eps && t >= 0.0 - eps && u <= 1.0 + eps && u >= 0.0 - eps) {
       crossingPoint.set(particle.pos.x + t*(particle.temp_pos.x - particle.pos.x), particle.pos.y + t*(particle.temp_pos.y - particle.pos.y));
       return PVector.sub(crossingPoint, P1).mag();
     } else { 
