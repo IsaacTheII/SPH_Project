@@ -22,7 +22,7 @@ Simulation sim;
 PeasyCam cam;
 
 void setup() {
-  size(1000, 1000, P3D);
+  size(800, 400, P3D);
   colorMode(HSB, 1);
   smooth();
 
