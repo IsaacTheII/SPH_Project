@@ -110,36 +110,8 @@ class Boundary { //<>//
     return reflected;
   }
 
-  void rotateBoundary(float alpha) { // rotate a (line segment) boundary around its center point (in 2D)
-
-    float s = sin(alpha);
-    float c = cos(alpha);
-
-    // translate point back to origin:
-    startPoint.x -= center.x;
-    startPoint.y -= center.y;
-    endPoint.x -= center.x;
-    endPoint.y -= center.y;
-
-    // rotate point around origin
-    float newStartPointx = startPoint.x * c - startPoint.y * s;
-    float newStartPointy = startPoint.x * s + startPoint.y * c;
-    float newEndPointx = endPoint.x * c - endPoint.y * s;
-    float newEndPointy = endPoint.x * s + endPoint.y * c;
-
-    // translate point back:
-    startPoint.x = newStartPointx + center.x;
-    startPoint.y = newStartPointy + center.y;
-    endPoint.x = newEndPointx + center.x;
-    endPoint.y = newEndPointy + center.y;
-
-    // update normal vector
-    normal = new PVector(startPoint.y - endPoint.y, endPoint.x - startPoint.x);
-    normal.div(normal.mag());
-    center = PVector.div(PVector.add(startPoint, endPoint), 2);
-  }
-
   void drawBoundary(int size) {
+
     float x1 = map(startPoint.x, 0, 1, -size/2, size/2);
     float y1 = map(startPoint.y, 0, 1, -size/2, size/2);
     float x2 = map(endPoint.x, 0, 1, -size/2, size/2);
