@@ -101,7 +101,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
         }
       }
     } else {
-      if (param == 1 && btype != 5) {
+      if (param == 1 && btype < 5) {
         for (int i = 0; i < num_particles-1; i++) {
           float x = random(1);
           float y = random(1);
@@ -110,7 +110,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
         }
         Particle particle = new Particle(new PVector(0.5, 0.5), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, e_ini);
         particles.add(particle);
-      } else if (param == 2 && btype != 5) {
+      } else if (param == 2 && btype < 5) {
         for (int i = 0; i < num_particles-1; i++) {
           float x = random(1);
           float y = random(1);
@@ -119,7 +119,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
         }
         Particle particle = new Particle(new PVector(0.01, 0.5), new PVector(v_ini, -v_ini), new PVector(0.0, 0.0), 1./num_particles, 1);
         particles.add(particle);
-      } else if (param == 0 && btype != 5) {
+      } else if (param == 0 && btype < 5) {
         float spacing = 1. / iter;
         for (int x = 0; x < iter; x++) {
           for (int y = 0; y < iter; y++) {
@@ -139,6 +139,14 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
           float x = random(1);
           float y = random(1);
           Particle particle = new Particle(new PVector(x, y), new PVector(0.0, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1);
+          particles.add(particle);
+        }
+      } else if (btype >= 6) {
+        println("Generating wing particles.");
+        for (int i = 0; i < pow(iter, 2); i++) {
+          float x = random(0.1);
+          float y = random(1);
+          Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1);
           particles.add(particle);
         }
       }
@@ -217,6 +225,53 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
       //boundaries.add(new Boundary(new PVector(0.4, 0.55), new PVector(0.0, 1.0)));
       boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.45)));
       boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55)));
+    } else if (btype == 6) {
+      //Wing
+      boundaries.add(new Boundary(new PVector(0.32, 0.52), new PVector(0.375, 0.5)));
+      boundaries.add(new Boundary(new PVector(0.32, 0.52), new PVector(0.315, 0.55)));
+      boundaries.add(new Boundary(new PVector(0.375, 0.5), new PVector(0.425, 0.5)));
+      boundaries.add(new Boundary(new PVector(0.425, 0.5), new PVector(0.7, 0.6)));
+      boundaries.add(new Boundary(new PVector(0.315, 0.55), new PVector(0.7, 0.6)));
+      boundaries.add(new Boundary(new PVector(-0.1, 0.0), new PVector(1.1, 0.0)));
+      boundaries.add(new Boundary(new PVector(-0.1, 1.0), new PVector(1.1, 1.0)));
+    } else if (btype == 7) {
+      ArrayList<PVector> points = new ArrayList<PVector>();
+      //Wing
+      PVector p1 = new PVector(0.76, 0.6);
+      PVector p2 = new PVector(0.4, 0.515);
+      PVector p3 = new PVector(0.32, 0.515);
+      PVector p4 = new PVector(0.3, 0.5125);
+      PVector p5 = new PVector(0.285, 0.5);
+      PVector p6 = new PVector(0.2963, 0.4875);
+      PVector p7 = new PVector(0.325, 0.47);
+      PVector p8 = new PVector(0.375, 0.46);
+      PVector p9 = new PVector(0.45, 0.46);
+      PVector p10 = new PVector(0.55, 0.48);
+      points.add(p1);
+      points.add(p2);
+      points.add(p3);
+      points.add(p4);
+      points.add(p5);
+      points.add(p6);
+      points.add(p7);
+      points.add(p8);
+      points.add(p9);
+      points.add(p10);
+      float factor = 0.7;
+      PVector center = new PVector(0.5, 0.5);
+      for (PVector p : points) {
+        PVector shifted = PVector.sub(p, center);
+        boundaries.add(new Boundary(p1, p2));
+        p.set(PVector.add(PVector.mult(shifted, factor), center));
+      }
+      
+      for (int i = 0; i < 10; i++){
+        boundaries.add(new Boundary(points.get(i), points.get((i+1)%10)));
+      }
+
+      boundaries.add(new Boundary(new PVector(-0.1, 0.0), new PVector(1.1, 0.0)));
+      boundaries.add(new Boundary(new PVector(-0.1, 1.0), new PVector(1.1, 1.0)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.0), new PVector(0.0, 1.0)));
     }
   }
 
@@ -495,7 +550,7 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
 
     if (dim) {
       p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
-    } else if (!dim && btype == 5) {
+    } else if (!dim && btype >= 5) {
       if (p.pos.x > 1.0 || p.pos.x < 0.0) {
         garbage_colleciton.add(p);
       }
@@ -525,10 +580,12 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
   }
 
   void ignite() {
-    for (Particle p : particles) {
-      if ( p.pos.x >= .38 && p.pos.x <= .42) {
-        if ( p.pos.y >= 0.48 && p.pos.y <= 0.52) {
-          p.e *= 1.01;
+    if (btype == 5) {      
+      for (Particle p : particles) {
+        if ( p.pos.x >= .38 && p.pos.x <= .42) {
+          if ( p.pos.y >= 0.48 && p.pos.y <= 0.52) {
+            p.e *= 1.01;
+          }
         }
       }
     }
@@ -579,10 +636,18 @@ class Simulation { //<>// //<>// //<>// //<>// //<>//
     particles.removeAll(garbage_colleciton);
     garbage_colleciton.clear();
     if (btype == 5 && max_val <= 20) {
+      //if (btype == 5 && particles.size() < pow(iter, 2)) {
       float x = random(0.15, 0.2);
       float y = random(0.4, 0.6);
       particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 50));
       //ignite();
+    } else if (btype >= 6) {
+      while (particles.size() < pow(iter, 2)) {
+        float x = 0.001;
+        float y = random(1);
+        particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
+        //ignite();
+      }
     }
     this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(1, 1), dim);
     drift1();
