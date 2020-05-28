@@ -3,19 +3,17 @@ import peasy.*;
 float a = 0.;
 int leaf_size = 8;
 int speed_up = 1;
-int param = 0; // 2 = testing environment (low amount of particles), 1 = random, 0 = uniform
 int iter = 25;
-float e_ini = 1.;
+float e_ini = 1;
 int nn = 8;
 boolean dim = false;
 float courant = 0.05;
 int size = 1000;
 float v_ini = 5;
-int btype = 7;
+int btype = 5;
 float frame_dt = 0.;
 float dt_thresh = 0.0003;
 int total_framecount = 0;
-
 
 Simulation sim;
 
@@ -28,8 +26,7 @@ void setup() {
 
   cam = new PeasyCam(this, width/2, height/2, 0, 1000);
 
-
-  sim = new Simulation(leaf_size, param, iter, e_ini, nn, dim, courant, size, v_ini, btype);
+  sim = new Simulation(leaf_size, iter, e_ini, nn, dim, courant, size, v_ini);
   sim.calc_forces();
 }
 
@@ -55,7 +52,7 @@ void draw() {
     total_framecount++;
     if (total_framecount % 1000 == 0) sim.reset_e();
   }
-  println(counter);
+  //println(counter);
   //total_framecount++;
   //if (total_framecount % 100 == 0) sim.reset_e();
   //sim.update();
