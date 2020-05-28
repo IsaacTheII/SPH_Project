@@ -19,8 +19,9 @@ class Simulation { //<>//
   PVector rlow;
   PVector rhigh;
   ArrayList<Particle> garbage_colleciton = new ArrayList<Particle>();
+  float chamber_threshold;
 
-  Simulation(int leaf_size_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_) {
+  Simulation(int leaf_size_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_) {
     leaf_size = leaf_size_;
     iter = iter_;
     e_ini = e_ini_;
@@ -30,6 +31,11 @@ class Simulation { //<>//
     size = size_;
     v_ini = v_ini_;
     boundaries = new ArrayList<Boundary>();
+    if (btype_ == 0) {
+      chamber_threshold = 10.0;
+    } else if (btype_ == 1) {
+      chamber_threshold = 20.0;
+    }
 
     if (dim) {
       gamma = 5./3.; // gamma = (f+2)/f , f = number of degrees of freedom
@@ -43,9 +49,9 @@ class Simulation { //<>//
     particles = new ArrayList<Particle>();
     rlow = getRlow();
     rhigh = getRhigh();
-    root = new Node(0, 10, rlow, rhigh, dim); // hardcoded 10 particles to start with btype = 5
+    root = new Node(0, 10, rlow, rhigh, dim); 
     read_data();
-    createBoundaries();
+    createBoundaries(btype_);
   }
 
   PVector getRlow() {
@@ -78,17 +84,28 @@ class Simulation { //<>//
     println("Done creating particles!\n");
   }
 
-  void createBoundaries() {
+  void createBoundaries(int btype) {
     //combustion champer
-    boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.4, 0.455)));
-    boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.4, 0.545)));
+    if (btype == 0) {
+      boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.4, 0.455))); // small nozzle
+      boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.4, 0.545))); // small nozzle
+    } else if (btype == 1) {
+      boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.4, 0.4))); // big nozzle
+      boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.4, 0.6))); // big nozzle
+    }
+
     boundaries.add(new Boundary(new PVector(0.09, 0.3), new PVector(0.31, 0.3)));
     boundaries.add(new Boundary(new PVector(0.09, 0.7), new PVector(0.31, 0.7)));
     boundaries.add(new Boundary(new PVector(0.1, 0.3), new PVector(0.1, 0.7)));
 
     //nozzle
-    boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.45)));
-    boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55)));
+    if (btype == 0) {
+      boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.45))); // small nozzle
+      boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55))); // small nozzle
+    } else if (btype == 1) {
+      boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.4))); // big nozzle
+      boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.6))); // big nozzle
+    }
 
     // Reversely orientated boundaries. Not necessary?
     //boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.0, 0.0)));
@@ -376,13 +393,11 @@ class Simulation { //<>//
     }
   }
 
-  void ignite() {
-    if (btype == 5) {      
-      for (Particle p : particles) {
-        if ( p.pos.x >= .38 && p.pos.x <= .42) {
-          if ( p.pos.y >= 0.48 && p.pos.y <= 0.52) {
-            p.e *= 1.01;
-          }
+  void ignite() {    
+    for (Particle p : particles) {
+      if ( p.pos.x >= .38 && p.pos.x <= .42) {
+        if ( p.pos.y >= 0.48 && p.pos.y <= 0.52) {
+          p.e *= 1.01;
         }
       }
     }
@@ -430,9 +445,17 @@ class Simulation { //<>//
   void update() {
     particles.removeAll(garbage_colleciton);
     garbage_colleciton.clear();
-    if (max_val <= 20) {
-      float x = random(0.15, 0.2);
-      float y = random(0.4, 0.6);
+    if (max_val <= chamber_threshold) {
+      //float x = random(0.15, 0.2);
+      //float y = random(0.4, 0.6);
+      float r = random(1);
+      float x, y;
+      x = random(0.12, 0.2);
+      if (r < 0.5) {
+        y = random(0.31, 0.5);
+      } else {
+        y = random(0.5, 0.69);
+      }
       particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 50));
     }
     this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(1, 1), dim);
@@ -444,7 +467,8 @@ class Simulation { //<>//
   }
 
   void show_particles() {
-    root.show(size);
+    //root.show(size);
+    stroke(0, 0, 1);
     for (Boundary b : boundaries) {
       b.drawBoundary(size);
     }
