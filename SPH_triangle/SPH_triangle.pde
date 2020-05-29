@@ -3,7 +3,7 @@ import peasy.*;
 float a = 0.;
 int leaf_size = 8;
 int speed_up = 1;
-int iter = 91;
+int iter = 65;
 float e_ini = 1.;
 int nn = 16;
 boolean dim = false;
@@ -59,5 +59,5 @@ void draw() {
 
   sim.show_particles();
   frame_dt = frame_dt%dt_thresh;
-  saveFrame("movie/SPH_#####.jpg"); //<>//
+  //saveFrame("movie/SPH_#####.jpg"); //<>//
 }
