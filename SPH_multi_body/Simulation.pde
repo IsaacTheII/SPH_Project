@@ -49,7 +49,7 @@ class Simulation { //<>//
     rlow = getRlow();
     //rhigh = getRhigh();
     PVector rhigh = new PVector(w, h);
-    root = new Node(0, 10, rlow, rhigh, dim); // hardcoded 20 particles for multi body
+    root = new Node(0, 100, rlow, rhigh, dim); // hardcoded 20 particles for multi body
     read_data();
     createBoundaries();
   }
@@ -74,7 +74,7 @@ class Simulation { //<>//
     println("Creating ", num_particles, " particles");
 
     randomSeed(0);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 100; i++) {
       float x = random(1);
       float y = random(1);
       Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1);
@@ -108,24 +108,35 @@ class Simulation { //<>//
       boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.2, 0.6)));
       boundaries.add(new Boundary(new PVector(0.1, 0.7), new PVector(0.2, 0.6)));
 
-      // rectangle
+      // rectangle / polygon
       boundaries.add(new Boundary(new PVector(0.4, 0.5), new PVector(0.4, 0.35)));
       boundaries.add(new Boundary(new PVector(0.4, 0.35), new PVector(0.55, 0.35)));
       boundaries.add(new Boundary(new PVector(0.55, 0.35), new PVector(0.55, 0.5)));
       boundaries.add(new Boundary(new PVector(0.55, 0.5), new PVector(0.4, 0.5)));
 
       // line
-      boundaries.add(new Boundary(new PVector(0.4, 0.7), new PVector(0.6, 0.58)));
+      //boundaries.add(new Boundary(new PVector(0.4, 0.7), new PVector(0.6, 0.58)));
+      //boundaries.add(new Boundary(new PVector(1, 0.5), new PVector(1.3, 0.5)));
     } else if (btype == 2) {
       // make Polygon (circle)
-      
+
       int number_of_segments = 20;
       float radius = 0.1;
       PVector center = new PVector(0.3, 0.5);
-      
+
       makePolygon(number_of_segments, radius, center);
+    } else if (btype == 3) {
+      // different polygons
+
+      makePolygon(6, 0.12, new PVector(0.3, 0.6));
+      makePolygon(4, 0.12, new PVector(0.8, 0.3));
+      
+      // line
+      //boundaries.add(new Boundary(new PVector(0.4, 0.7), new PVector(0.6, 0.58)));
+      //boundaries.add(new Boundary(new PVector(1, 0.5), new PVector(1.3, 0.5)));
     }
   }
+
 
   int getNexdim(int dimension) {
     if (dim) {
@@ -435,7 +446,7 @@ class Simulation { //<>//
       boundaries.add(new Boundary(start, end));
     }
   }
-  
+
   void ignite() {     
     for (Particle p : particles) {
       if ( p.pos.x >= .38 && p.pos.x <= .42) {
