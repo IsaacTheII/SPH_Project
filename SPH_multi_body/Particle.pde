@@ -286,14 +286,14 @@ class Particle {
     }
   }
 
-  void show_2d(int size, float max_val) {
+  void show_2d(int size, float max_val, int w, int h) {
     if (!isReflectedParticle) {
       float col = map(rho, 0, max_val, 0, 1);
       stroke(col, 1, 1);
       strokeWeight(map(pow(rho, 1), 0, pow(max_val, 1), 5, 1)); // inverted density mapping
 
-      float x = map(pos.x, 0, 1, -size/2, size/2);
-      float y = map(pos.y, 0, 1, -size/2, size/2);
+      float x = map(pos.x, 0, w, -size*w/2, size*w/2);
+      float y = map(pos.y, 0, h, -size*h/2, size*h/2);
       point(x, y);
     }
 

@@ -20,8 +20,9 @@ class Simulation { //<>//
   PVector rlow;
   PVector rhigh;
   ArrayList<Particle> garbage_colleciton = new ArrayList<Particle>();
+  int w, h;
 
-  Simulation(int leaf_size_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_) {
+  Simulation(int leaf_size_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_, int w_, int h_) {
     leaf_size = leaf_size_;
     iter = iter_;
     e_ini = e_ini_;
@@ -32,6 +33,8 @@ class Simulation { //<>//
     v_ini = v_ini_;
     btype = btype_;
     boundaries = new ArrayList<Boundary>();
+    w = w_;
+    h = h_;
 
     if (dim) {
       gamma = 5./3.; // gamma = (f+2)/f , f = number of degrees of freedom
@@ -44,8 +47,9 @@ class Simulation { //<>//
     }
     particles = new ArrayList<Particle>();
     rlow = getRlow();
-    rhigh = getRhigh();
-    root = new Node(0, 10, rlow, rhigh, dim); // hardcoded 20 particles for multi body
+    //rhigh = getRhigh();
+    PVector rhigh = new PVector(w, h);
+    root = new Node(0, 100, rlow, rhigh, dim); // hardcoded 20 particles for multi body
     read_data();
     createBoundaries();
   }
@@ -70,7 +74,7 @@ class Simulation { //<>//
     println("Creating ", num_particles, " particles");
 
     randomSeed(0);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 100; i++) {
       float x = random(1);
       float y = random(1);
       Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1);
@@ -96,7 +100,6 @@ class Simulation { //<>//
       boundaries.add(new Boundary(new PVector(0.4, 0.35), new PVector(0.55, 0.35)));
       boundaries.add(new Boundary(new PVector(0.55, 0.35), new PVector(0.55, 0.5)));
       boundaries.add(new Boundary(new PVector(0.55, 0.5), new PVector(0.4, 0.5)));
-
     } else if (btype == 1) {
       // same as btype = 0 but with an additional line element
       // trapez
@@ -105,16 +108,35 @@ class Simulation { //<>//
       boundaries.add(new Boundary(new PVector(0.3, 0.6), new PVector(0.2, 0.6)));
       boundaries.add(new Boundary(new PVector(0.1, 0.7), new PVector(0.2, 0.6)));
 
-      // rectangle
+      // rectangle / polygon
       boundaries.add(new Boundary(new PVector(0.4, 0.5), new PVector(0.4, 0.35)));
       boundaries.add(new Boundary(new PVector(0.4, 0.35), new PVector(0.55, 0.35)));
       boundaries.add(new Boundary(new PVector(0.55, 0.35), new PVector(0.55, 0.5)));
       boundaries.add(new Boundary(new PVector(0.55, 0.5), new PVector(0.4, 0.5)));
+
+      // line
+      //boundaries.add(new Boundary(new PVector(0.4, 0.7), new PVector(0.6, 0.58)));
+      //boundaries.add(new Boundary(new PVector(1, 0.5), new PVector(1.3, 0.5)));
+    } else if (btype == 2) {
+      // make Polygon (circle)
+
+      int number_of_segments = 20;
+      float radius = 0.1;
+      PVector center = new PVector(0.3, 0.5);
+
+      makePolygon(number_of_segments, radius, center);
+    } else if (btype == 3) {
+      // different polygons
+
+      makePolygon(6, 0.12, new PVector(0.3, 0.6));
+      makePolygon(4, 0.12, new PVector(0.8, 0.3));
       
       // line
-      boundaries.add(new Boundary(new PVector(0.4, 0.7), new PVector(0.6, 0.58)));
+      //boundaries.add(new Boundary(new PVector(0.4, 0.7), new PVector(0.6, 0.58)));
+      //boundaries.add(new Boundary(new PVector(1, 0.5), new PVector(1.3, 0.5)));
     }
   }
+
 
   int getNexdim(int dimension) {
     if (dim) {
@@ -392,7 +414,7 @@ class Simulation { //<>//
     if (dim) {
       p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
     } else {
-      if (p.pos.x >= 1.0) {
+      if (p.pos.x >= w) {
         p.pos.set(0.0, random(1));
         p.vel.set(v_ini, 0);
         reset_e();
@@ -410,6 +432,18 @@ class Simulation { //<>//
       //}
       //p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1.);
       //p.pos.set(p.pos.x, (p.pos.y + 1) % 1.);
+    }
+  }
+  void makePolygon(int number_of_segments, float radius, PVector center) {
+
+    for (int i = 0; i < number_of_segments; i++) {
+      float x1 = radius*cos((2*PI/number_of_segments)*i) + center.x;
+      float y1 = radius*sin((2*PI/number_of_segments)*i) + center.y;
+      PVector start = new PVector(x1, y1);
+      float x2 = radius*cos((2*PI/number_of_segments)*(i+1)) + center.x;
+      float y2 = radius*sin((2*PI/number_of_segments)*(i+1)) + center.y;
+      PVector end = new PVector(x2, y2);
+      boundaries.add(new Boundary(start, end));
     }
   }
 
@@ -468,7 +502,7 @@ class Simulation { //<>//
       float y = random(1);
       particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 10));
     }
-    root = new Node(0, particles.size(), getRlow(), getRhigh(), dim);
+    root = new Node(0, particles.size(), getRlow(), new PVector(w, h), dim);
     drift1();
     calc_forces();
     kick();
@@ -479,7 +513,7 @@ class Simulation { //<>//
     //root.show(size);
     stroke(0, 0, 1);
     for (Boundary b : boundaries) {
-      b.drawBoundary(size);
+      b.drawBoundary(size, w, h);
     }
     if (dim) {
       for (Particle p : particles) {
@@ -487,7 +521,7 @@ class Simulation { //<>//
       }
     } else {  
       for (Particle p : particles) {
-        p.show_2d(size, max_val);
+        p.show_2d(size, max_val, w, h);
       }
     }
   }

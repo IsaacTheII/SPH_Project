@@ -72,26 +72,26 @@ class Simulation { //<>//
     println("Creating ", num_particles, " particles");
 
     randomSeed(0);
-    //for (int i = 0; i < num_particles; i++) {
-    //  float x = random(1);
-    //  float y = random(1);
-    //  Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1);
-    //  particles.add(particle);
-    //}
-
-    float spacing = 1. / iter;
-    for (int x = 0; x < iter; x++) {
-      for (int y = 0; y < iter; y++) {
-        if ((x == floor(iter/3)) && (y == floor(iter/2))) {
-          Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, e_ini);
-          particles.add(particle);
-        } else {
-          PVector pos = new PVector(spacing * x + 0.5 * spacing + randomGaussian() / 1000, spacing * y + 0.5 * spacing + randomGaussian() / 1000);
-          Particle particle = new Particle(pos, new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1.);
-          particles.add(particle);
-        }
-      }
+    for (int i = 0; i < num_particles; i++) {
+      float x = random(1);
+      float y = random(1);
+      Particle particle = new Particle(new PVector(x, y), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1);
+      particles.add(particle);
     }
+
+    //float spacing = 1. / iter;
+    //for (int x = 0; x < iter; x++) {
+    //  for (int y = 0; y < iter; y++) {
+    //    if ((x == floor(iter/3)) && (y == floor(iter/2))) {
+    //      Particle particle = new Particle(new PVector(spacing * x + 0.5 * spacing, spacing * y + 0.5 * spacing), new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, e_ini);
+    //      particles.add(particle);
+    //    } else {
+    //      PVector pos = new PVector(spacing * x + 0.5 * spacing + randomGaussian() / 1000, spacing * y + 0.5 * spacing + randomGaussian() / 1000);
+    //      Particle particle = new Particle(pos, new PVector(v_ini, 0), new PVector(0, 0), 1./num_particles, 1.);
+    //      particles.add(particle);
+    //    }
+    //  }
+    //}
     println("Done creating particles!\n");
   }
 
@@ -394,14 +394,15 @@ class Simulation { //<>//
     if (dim) {
       p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
     } else {
-      if (p.pos.x >= 1.0) {
+      if (p.pos.x >= 1.0 || p.pos.x <= 0.0) {
+        //garbage_colleciton.add(p);
         p.pos.set(0.0, random(1));
         p.vel.set(v_ini, 0);
         //reset_e();
-      } else if (p.pos.x <= 0.0) {
-        p.pos.set(0.0, random(1));
-        p.vel.set(v_ini, 0);
-        //reset_e();
+        //} else if (p.pos.x <= 0.0) {
+        //p.pos.set(0.0, random(1));
+        //p.vel.set(v_ini, 0);
+        reset_e();
       }
       //if (p.pos.y > 1.0) {
       //  p.pos.set(p.pos.x, 2 - p.pos.y);
@@ -465,6 +466,16 @@ class Simulation { //<>//
   }
 
   void update() {
+    //particles.removeAll(garbage_colleciton);
+    //garbage_colleciton.clear();
+
+    //if (frameCount % 30 == 0) {
+    //  println(max_val);
+    //  for (int i = 1; i <= 2; i++) {
+    //    particles.add(new Particle(new PVector(0.0, random(1)), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
+    //  }
+    //}
+    //this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(1, 1), dim);
     drift1();
     calc_forces();
     kick();
