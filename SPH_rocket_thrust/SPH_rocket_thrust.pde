@@ -8,25 +8,25 @@ float e_ini = 1;
 int nn = 8;
 boolean dim = false;
 float courant = 0.05;
-int size = 1000;
-float v_ini = 5;
-int btype = 0;
+int size = 400;
+float v_ini = 10;
+int btype = 1;
+int chambertype = 1;
+int atmospheretype = 1;
 float frame_dt = 0.;
 float dt_thresh = 0.0006;
 int total_framecount = 0;
+int w = 4;
+int h = 1;
 
 Simulation sim;
 
-PeasyCam cam;
-
 void setup() {
-  size(512, 512, P3D);
+  size(1600, 800, P2D);
   colorMode(HSB, 1);
   smooth();
 
-  cam = new PeasyCam(this, width/2, height/2, 0, 1000);
-
-  sim = new Simulation(leaf_size, iter, e_ini, nn, dim, courant, size, v_ini, btype);
+  sim = new Simulation(leaf_size, iter, e_ini, nn, dim, courant, size, v_ini, btype, atmospheretype, chambertype, w, h);
   sim.calc_forces();
 }
 
@@ -50,7 +50,7 @@ void draw() {
     frame_dt += sim.dt;
     counter++;
     total_framecount++;
-    if (total_framecount % 1000 == 0) sim.reset_e();
+    //if (total_framecount % 1000 == 0) sim.reset_e();
   }
   //println(counter);
   //total_framecount++;
@@ -59,5 +59,5 @@ void draw() {
 
   sim.show_particles();
   frame_dt = frame_dt%dt_thresh;
-  //SsaveFrame("movie/SPH_#####.jpg"); //<>//
+  saveFrame("movie/SPH_####.jpg"); //<>//
 }

@@ -20,8 +20,12 @@ class Simulation { //<>//
   PVector rhigh;
   ArrayList<Particle> garbage_colleciton = new ArrayList<Particle>();
   float chamber_threshold;
+  int atmospheretype;
+  int chambertype;
+  int w;
+  int h;
 
-  Simulation(int leaf_size_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_) {
+  Simulation(int leaf_size_, int iter_, float e_ini_, int nn_, boolean dim_, float courant_, int size_, float v_ini_, int btype_, int atmospheretype_, int chambertype_, int w_, int h_) {
     leaf_size = leaf_size_;
     iter = iter_;
     e_ini = e_ini_;
@@ -30,27 +34,26 @@ class Simulation { //<>//
     courant = courant_;
     size = size_;
     v_ini = v_ini_;
+    atmospheretype = atmospheretype_;
+    chambertype = chambertype_;
+    w = w_;
+    h = h_;    
+
     boundaries = new ArrayList<Boundary>();
     if (btype_ == 0) {
-      chamber_threshold = 10.0;
+      chamber_threshold = 150.0;
     } else if (btype_ == 1) {
-      chamber_threshold = 20.0;
+      chamber_threshold = 200.0;
     }
 
-    if (dim) {
-      gamma = 5./3.; // gamma = (f+2)/f , f = number of degrees of freedom
-      sigma = 8./PI;
-      num_particles = int(pow(iter, 3));
-    } else {
-      gamma = 2.;
-      sigma = 40./(7 * PI);
-      num_particles = int(pow(iter, 2));
-    }
+    gamma = 1.1;
+    sigma = 40./(7 * PI);
+    num_particles = int(pow(iter, 2));
     particles = new ArrayList<Particle>();
-    rlow = getRlow();
-    rhigh = getRhigh();
-    root = new Node(0, 10, rlow, rhigh, dim); 
     read_data();
+    rlow = new PVector(0, 0);
+    rhigh = new PVector(w, h);
+    root = new Node(0, particles.size(), rlow, rhigh, dim);
     createBoundaries(btype_);
   }
 
@@ -74,38 +77,159 @@ class Simulation { //<>//
     println("Creating ", num_particles, " particles");
 
     randomSeed(0); 
-    println("Generating just a few particles.");
-    for (int i = 0; i < 10; i++) {
-      float x = random(1);
-      float y = random(1);
-      Particle particle = new Particle(new PVector(x, y), new PVector(0.0, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1);
-      particles.add(particle);
+    
+    if (atmospheretype == 0) {
+      for (int i = 0; i <= 200; i++) particles.add(new Particle(new PVector(random(0.101, 0.199), random(0.301, 0.699)), new PVector(0.0, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
+
+      //boundaries.add(new Boundary(new PVector(0, 0.0), new PVector(w, 0.0)));
+      //boundaries.add(new Boundary(new PVector(0.0, h), new PVector(w, h)));
     }
+
+    if (atmospheretype == 1) {
+      for (int i = 0; i <= 2000; i++) particles.add(new Particle(new PVector(random(w), random(h)), new PVector(0.0, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1));
+
+      //  rlow = new PVector(0, 0);
+      //  rhigh = new PVector(w, h);
+      //  root = new Node(0, particles.size(), rlow, rhigh, dim);
+      //  for (int i = 0; i <= 20; i++)  update();
+      //  for (Particle p : particles) {
+      //    if(p.pos.y >= 0.35 && p.pos.y <= 0.67) garbage_colleciton.add(p);
+      //    else p.isGhostParticle = false;
+      //  }
+      //  particles.removeAll(garbage_colleciton);
+      //  garbage_colleciton.clear();
+
+      boundaries.add(new Boundary(new PVector(0, 0.0), new PVector(w, 0.0)));
+      boundaries.add(new Boundary(new PVector(0.0, h), new PVector(w, h)));
+    }
+
+    println("Generating just a few particles.");
+    //for (int i = 0; i < 400; i++) {
+    //  Particle particle = new Particle(new PVector(random(0.101, 0.299), random(0.301, 0.699)), new PVector(0.0, 0.0), new PVector(0.0, 0.0), 1./num_particles, 1);
+    //  particles.add(particle);
+    //}
+
     println("Done creating particles!\n");
   }
 
   void createBoundaries(int btype) {
     //combustion champer
-    if (btype == 0) {
-      boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.4, 0.455))); // small nozzle
-      boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.4, 0.545))); // small nozzle
-    } else if (btype == 1) {
-      boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.4, 0.4))); // big nozzle
-      boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.4, 0.6))); // big nozzle
+    if (chambertype == 0) {
+      if (btype == 0) {
+        boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.5, 0.42))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.5, 0.58))); // small nozzle
+      } else if (btype == 1) {
+        //boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.4, 0.4))); // big nozzle
+        //boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.4, 0.6))); // big nozzle
+
+        boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.5, 0.42))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.5, 0.58))); // small nozzle
+      }
+      boundaries.add(new Boundary(new PVector(0.317, 0.3), new PVector(0.09, 0.3)));
+      boundaries.add(new Boundary(new PVector(0.317, 0.7), new PVector(0.09, 0.7)));
+
+      //boundaries.add(new Boundary(new PVector(0.09, 0.3), new PVector(0.315, 0.3)));
+      //boundaries.add(new Boundary(new PVector(0.09, 0.7), new PVector(0.315, 0.7)));
+
+      boundaries.add(new Boundary(new PVector(0.1, 0.299), new PVector(0.1, 0.39)));
+
+      boundaries.add(new Boundary(new PVector(0.1, 0.39), new PVector(0.0, 0.37)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.37), new PVector(0.0, 0.47)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.47), new PVector(0.06, 0.5)));
+
+      //boundaries.add(new Boundary(new PVector(0.1, 0.47), new PVector(0.1, 0.53)));
+
+      boundaries.add(new Boundary(new PVector(0.06, 0.5), new PVector(0.0, 0.53)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.53), new PVector(0.0, 0.62)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.62), new PVector(0.1, 0.6)));
+
+      boundaries.add(new Boundary(new PVector(0.1, 0.6), new PVector(0.1, 0.701)));
+
+      //nozzle
+      if (btype == 0) {
+        boundaries.add(new Boundary(new PVector(0.6, 0.38), new PVector(0.5, 0.42))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.6, 0.62), new PVector(0.5, 0.58))); // small nozzle
+      } else if (btype == 1) {
+        //boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.4))); // big nozzle
+        //boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.6))); // big nozzle
+        //  boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.7, 0.37)));
+        //  boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.7, 0.63)));
+        //  boundaries.add(new Boundary(new PVector(0.8, 0.37), new PVector(0.7, 0.37)));
+        //  boundaries.add(new Boundary(new PVector(0.8, 0.63), new PVector(0.7, 0.63)));
+
+
+        boundaries.add(new Boundary(new PVector(0.57, 0.36), new PVector(0.5, 0.42))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.57, 0.64), new PVector(0.5, 0.58))); // small nozzle
+
+        boundaries.add(new Boundary(new PVector(0.57, 0.36), new PVector(0.65, 0.33))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.57, 0.64), new PVector(0.65, 0.67))); // small nozzle
+
+        boundaries.add(new Boundary(new PVector(0.8, 0.31), new PVector(0.65, 0.33))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.8, 0.69), new PVector(0.65, 0.67))); // small nozzle
+
+        boundaries.add(new Boundary(new PVector(0.8, 0.31), new PVector(0.9, 0.315))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.8, 0.69), new PVector(0.9, 0.685))); // small nozzle
+      }
+    } else if (chambertype == 1) {
+      if (btype == 0) {
+        boundaries.add(new Boundary(new PVector(0.2, 0.29), new PVector(0.5, 0.42))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.2, 0.71), new PVector(0.5, 0.58))); // small nozzle
+      } else if (btype == 1) {
+        //boundaries.add(new Boundary(new PVector(0.3, 0.29), new PVector(0.4, 0.4))); // big nozzle
+        //boundaries.add(new Boundary(new PVector(0.3, 0.71), new PVector(0.4, 0.6))); // big nozzle
+
+        boundaries.add(new Boundary(new PVector(0.2, 0.29), new PVector(0.5, 0.42))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.2, 0.71), new PVector(0.5, 0.58))); // small nozzle
+      }
+
+      boundaries.add(new Boundary(new PVector(0.217, 0.3), new PVector(0.09, 0.3)));
+      boundaries.add(new Boundary(new PVector(0.217, 0.7), new PVector(0.09, 0.7)));
+
+      //boundaries.add(new Boundary(new PVector(0.09, 0.3), new PVector(0.315, 0.3)));
+      //boundaries.add(new Boundary(new PVector(0.09, 0.7), new PVector(0.315, 0.7)));
+
+      boundaries.add(new Boundary(new PVector(0.1, 0.299), new PVector(0.1, 0.39)));
+
+      boundaries.add(new Boundary(new PVector(0.1, 0.39), new PVector(0.0, 0.37)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.37), new PVector(0.0, 0.47)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.47), new PVector(0.06, 0.5)));
+
+      //boundaries.add(new Boundary(new PVector(0.1, 0.47), new PVector(0.1, 0.53)));
+
+      boundaries.add(new Boundary(new PVector(0.06, 0.5), new PVector(0.0, 0.53)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.53), new PVector(0.0, 0.62)));
+      boundaries.add(new Boundary(new PVector(0.0, 0.62), new PVector(0.1, 0.6)));
+
+      boundaries.add(new Boundary(new PVector(0.1, 0.6), new PVector(0.1, 0.701)));
+
+      //nozzle
+      if (btype == 0) {
+        boundaries.add(new Boundary(new PVector(0.6, 0.38), new PVector(0.5, 0.42))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.6, 0.62), new PVector(0.5, 0.58))); // small nozzle
+      } else if (btype == 1) {
+        //boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.4))); // big nozzle
+        //boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.6))); // big nozzle
+        //  boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.7, 0.37)));
+        //  boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.7, 0.63)));
+        //  boundaries.add(new Boundary(new PVector(0.8, 0.37), new PVector(0.7, 0.37)));
+        //  boundaries.add(new Boundary(new PVector(0.8, 0.63), new PVector(0.7, 0.63)));
+
+
+        boundaries.add(new Boundary(new PVector(0.57, 0.36), new PVector(0.5, 0.42))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.57, 0.64), new PVector(0.5, 0.58))); // small nozzle
+
+        boundaries.add(new Boundary(new PVector(0.57, 0.36), new PVector(0.65, 0.33))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.57, 0.64), new PVector(0.65, 0.67))); // small nozzle
+
+        boundaries.add(new Boundary(new PVector(0.8, 0.31), new PVector(0.65, 0.33))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.8, 0.69), new PVector(0.65, 0.67))); // small nozzle
+
+        boundaries.add(new Boundary(new PVector(0.8, 0.31), new PVector(0.9, 0.315))); // small nozzle
+        boundaries.add(new Boundary(new PVector(0.8, 0.69), new PVector(0.9, 0.685))); // small nozzle
+      }
     }
 
-    boundaries.add(new Boundary(new PVector(0.09, 0.3), new PVector(0.31, 0.3)));
-    boundaries.add(new Boundary(new PVector(0.09, 0.7), new PVector(0.31, 0.7)));
-    boundaries.add(new Boundary(new PVector(0.1, 0.3), new PVector(0.1, 0.7)));
 
-    //nozzle
-    if (btype == 0) {
-      boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.45))); // small nozzle
-      boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.55))); // small nozzle
-    } else if (btype == 1) {
-      boundaries.add(new Boundary(new PVector(0.6, 0.4), new PVector(0.4, 0.4))); // big nozzle
-      boundaries.add(new Boundary(new PVector(0.6, 0.6), new PVector(0.4, 0.6))); // big nozzle
-    }
 
     // Reversely orientated boundaries. Not necessary?
     //boundaries.add(new Boundary(new PVector(0.4, 0.45), new PVector(0.0, 0.0)));
@@ -292,39 +416,23 @@ class Simulation { //<>//
   }
 
   void nn_density(Node root) {
-    if (dim) {
-      for (Particle p : particles) {
-        p.nn_search_3d(root, nn, particles);
-      }
-    } else {
-      for (Particle p : particles) {
-        p.nn_search_2d(root, nn, particles, boundaries);
-      }
+
+    for (Particle p : particles) {
+      p.nn_search_2d(root, nn, particles, boundaries);
     }
-    if (dim) {
-      for (Particle p : particles) {
-        p.rho = 0;
-        for (ParticleTuple tup : p.n_closest) {
-          p.rho += tup.p.m * p.monoghan_kernel_3d(tup.dist, sigma);
-        }
-        if (p.rho > max_val) {
-          max_val = p.rho;
+
+    max_val = 0;
+    for (Particle p : particles) {
+      p.rho = 0;
+      for (ParticleTuple tup : p.n_closest) {
+        if (!tup.p.isReflectedParticle) {
+          p.rho += tup.p.m * p.monoghan_kernel_2d(tup.dist, sigma);
         }
       }
-    } else {
-      max_val = 0;
-      for (Particle p : particles) {
-        p.rho = 0;
-        for (ParticleTuple tup : p.n_closest) {
-          if (!tup.p.isReflectedParticle) {
-            p.rho += tup.p.m * p.monoghan_kernel_2d(tup.dist, sigma);
-          }
-        }
-        if (p.rho > max_val) {
-          max_val = p.rho;
-        }
-        // add small positive number to rho to avoid zero density
+      if (p.rho > max_val) {
+        max_val = p.rho;
       }
+      // add small positive number to rho to avoid zero density
     }
   }
 
@@ -361,7 +469,7 @@ class Simulation { //<>//
 
   void reset_e() {
     for (Particle p : particles) {
-      p.e = 1.;
+      //p.e = 1.;
     }
   }
 
@@ -382,22 +490,18 @@ class Simulation { //<>//
   }
 
   void boundary_condtions(Particle p) {
-    if (dim) {
-      p.pos.set((p.pos.x + 1) % 1., (p.pos.y + 1) % 1., (p.pos.z + 1) % 1.);
-    } else
-      if (p.pos.x > 1.0 || p.pos.x < 0.0) {
-        garbage_colleciton.add(p);
-      }
-    if (p.pos.y > 1.0 || p.pos.y < 0.0) {
+    if (p.pos.x >= w || p.pos.x <= 0.0 || p.pos.y >= h || p.pos.y <= 0.0) {
       garbage_colleciton.add(p);
     }
   }
 
   void ignite() {    
     for (Particle p : particles) {
-      if ( p.pos.x >= .38 && p.pos.x <= .42) {
-        if ( p.pos.y >= 0.48 && p.pos.y <= 0.52) {
-          p.e *= 1.01;
+      if (p.isGhostParticle) continue;
+
+      if ( p.pos.x >= .52 && p.pos.x <= .6) {
+        if ( p.pos.y >= 0.42 && p.pos.y <= 0.58) {
+          p.e = 50.;
         }
       }
     }
@@ -405,6 +509,7 @@ class Simulation { //<>//
 
   void drift1() {
     for (Particle p : particles) {
+      if (p.isGhostParticle) continue;
 
       // Calculate the next position
       p.temp_pos = PVector.add(p.pos, PVector.mult(p.vel, dt * 0.5));
@@ -422,6 +527,7 @@ class Simulation { //<>//
 
   void drift2() {
     for (Particle p : particles) {
+      if (p.isGhostParticle) continue;
 
       // Calculate the next position
       p.temp_pos = PVector.add(p.pos, PVector.mult(p.vel, dt * 0.5));
@@ -437,8 +543,11 @@ class Simulation { //<>//
 
   void kick() {
     for (Particle p : particles) {
+      if (p.isGhostParticle) continue;
+
       p.vel.add(PVector.mult(p.a, dt));
       p.e += p.e_dot * dt;
+      p.e *= 0.9998;
     }
   }
 
@@ -448,17 +557,18 @@ class Simulation { //<>//
     if (max_val <= chamber_threshold) {
       //float x = random(0.15, 0.2);
       //float y = random(0.4, 0.6);
-      float r = random(1);
-      float x, y;
-      x = random(0.12, 0.2);
-      if (r < 0.5) {
-        y = random(0.31, 0.5);
-      } else {
-        y = random(0.5, 0.69);
-      }
-      particles.add(new Particle(new PVector(x, y), new PVector(v_ini, 0.0), new PVector(0.0, 0.0), 1./num_particles, 50));
+      //float r = random(1);
+      //float x, y;
+      //x = random(0.12, 0.2);
+      //if (r < 0.5) {
+      //  y = random(0.31, 0.5);
+      //} else {
+      //  y = random(0.5, 0.69);
+      //}
+      for (int i = 0; i <= 4; i++)  particles.add(new Particle(new PVector(random(0.001, 0.1), random(0.401, 0.469)), new PVector(v_ini, +v_ini/2.5), new PVector(0.0, 0.0), 1./num_particles, 50));
+      for (int i = 0; i <= 4; i++)  particles.add(new Particle(new PVector(random(0.001, 0.1), random(0.531, 0.579)), new PVector(v_ini, -v_ini/2.5), new PVector(0.0, 0.0), 1./num_particles, 50));
     }
-    this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(1, 1), dim);
+    this.root = new Node(0, particles.size(), new PVector(0, 0), new PVector(w, h), dim);
     drift1();
     ignite();
     calc_forces();
@@ -470,16 +580,11 @@ class Simulation { //<>//
     //root.show(size);
     stroke(0, 0, 1);
     for (Boundary b : boundaries) {
-      b.drawBoundary(size);
+      b.drawBoundary(size, w, h);
     }
-    if (dim) {
-      for (Particle p : particles) {
-        p.show_3d(size, max_val);
-      }
-    } else {  
-      for (Particle p : particles) {
-        p.show_2d(size, max_val);
-      }
+
+    for (Particle p : particles) {
+      p.show_2d(size, max_val, w, h);
     }
   }
 }
